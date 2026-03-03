@@ -42,6 +42,7 @@ export default function BasketballDemoScreen() {
   
   const intervalRef = useRef<any>(null);
   const msgIntervalRef = useRef<any>(null);
+  const pollIntervalRef = useRef<any>(null);
 
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -115,46 +116,71 @@ export default function BasketballDemoScreen() {
         }, 3500);
       }
 
-      console.log("🚀 Starting CV generation request with data:", data);
-      const result = await basketballCVService.generateVideoCV(data);
-      console.log("📥 Received response from backend:", result);
-      
-      if (interval) clearInterval(interval);
-      if (msgInterval) clearInterval(msgInterval);
+      console.log("🚀 Starting CV generation request (Async) with data:", data);
+      const startResult = await basketballCVService.generateVideoCV(data);
+      console.log("📥 Generation triggered:", startResult);
 
-      if (result.success) {
-          const res = result as any;
-          const baseUrl = basketballCVService.getBaseUrl();
+      if (startResult.success && startResult.job_id) {
+        const jobId = startResult.job_id;
+        
+        // Arrêter les timers de simulation si on a un vrai job_id
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (msgIntervalRef.current) clearInterval(msgIntervalRef.current);
+
+        // Démarrer le polling
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        
+        pollIntervalRef.current = setInterval(async () => {
+          const statusResult = await basketballCVService.getJobStatus(jobId);
           
-          if (res.filename) {
-            setGeneratedVideoUrl(`${baseUrl}/output/cv_videos/${res.filename}`);
+          if (statusResult.success) {
+            setProcessingProgress(statusResult.progress || 0);
+            if (statusResult.message) setProcessingMessage(statusResult.message);
+
+            if (statusResult.status === 'completed') {
+              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              const res = statusResult.result;
+              const baseUrl = basketballCVService.getBaseUrl();
+              
+              if (res.filename) {
+                setGeneratedVideoUrl(`${baseUrl}/output/cv_videos/${res.filename}`);
+              }
+              if (res.orchestrator_url) {
+                setEliteDraftUrl(res.orchestrator_url);
+              }
+              
+              setProcessingProgress(100);
+              setTimeRemaining(0);
+              setTimeout(() => {
+                setIsProcessing(false);
+                setStep('preview');
+              }, 1000);
+            } else if (statusResult.status === 'failed') {
+              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              Alert.alert('Erreur', statusResult.message || "La génération a échoué");
+              setIsProcessing(false);
+            }
+          } else {
+            // Job non trouvé (ex: serveur redémarré)
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+            console.error("❌ Job lost or not found:", statusResult.message);
+            setIsProcessing(false);
+            Alert.alert('Erreur', "La connexion avec le serveur de génération a été perdue. Veuillez recommencer.");
           }
-          
-          if (res.orchestrator_url) {
-            setEliteDraftUrl(res.orchestrator_url);
-          }
-          
-          setProcessingProgress(100);
-          if (Array.isArray(steps) && steps.length > 0) {
-            setProcessingMessage(steps[steps.length - 1]);
-          }
-        setTimeRemaining(0);
-        setTimeout(() => {
-          setIsProcessing(false);
-          setStep('preview');
-        }, 1000);
+        }, 3000); // Poll every 3 seconds
+
+        // Nettoyage de l'intervalle si le composant démonte (via useEffect ou autre si possible, 
+        // mais ici c'est une fonction one-shot)
+        // On pourrait stocker pollInterval dans une ref si besoin.
       } else {
-        console.error("❌ CV Generation failed:", result.message);
-        Alert.alert('Erreur', result.message);
-        setIsProcessing(false);
+        throw new Error(startResult.message || "Impossible de démarrer la génération");
       }
     } catch (error) {
       console.error("Error generating CV:", error);
       setIsProcessing(false);
-      Alert.alert(t('common.error'), "Erreur lors de la génération");
+      Alert.alert(t('common.error'), error instanceof Error ? error.message : "Erreur lors de la génération");
     } finally {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (msgIntervalRef.current) clearInterval(msgIntervalRef.current);
+      // Les timers de simulation sont déjà cleared ou gérés par pollInterval
     }
   };
 

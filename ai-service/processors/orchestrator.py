@@ -11,21 +11,21 @@ class VideoCVOrchestrator:
         self.capcut = CapCutExporter()
         # self.unity = UnityExporter() # Coming soon
 
-    async def generate_cv(self, player_data: Dict[str, Any]):
+    def generate_cv(self, player_data: Dict[str, Any]):
         tier = player_data.get('tier', CVTier.ESSENTIEL.value)
         logger.info(f"[ORCHESTRATOR] Orchestrating CV for tier: {tier}")
 
         if tier == CVTier.ESSENTIEL:
-            return await self._generate_essentiel(player_data)
+            return self._generate_essentiel(player_data)
         elif tier == CVTier.PRO:
-            return await self._generate_pro(player_data)
+            return self._generate_pro(player_data)
         elif tier == CVTier.ELITE:
-            return await self._generate_elite(player_data)
+            return self._generate_elite(player_data)
         else:
             logger.warning(f"Unknown tier {tier}, falling back to ESSENTIEL")
-            return await self._generate_essentiel(player_data)
+            return self._generate_essentiel(player_data)
 
-    async def _generate_essentiel(self, data):
+    def _generate_essentiel(self, data):
         """
         Tier ESSENTIEL: CapCut-only, simple transitions, basic text.
         """
@@ -72,7 +72,7 @@ class VideoCVOrchestrator:
 
         return self.capcut.save_draft(draft_id)
 
-    async def _generate_pro(self, data):
+    def _generate_pro(self, data):
         """
         Tier PRO: CapCut Advanced, Speed ramp, Glitch effects, Overlays, Player Stats.
         """
@@ -142,7 +142,7 @@ class VideoCVOrchestrator:
 
         return self.capcut.save_draft(draft_id)
 
-    async def _generate_elite(self, data):
+    def _generate_elite(self, data):
         """
         Tier ELITE: Unity (3D Intro mockup) + CapCut (Ultra Cinematic with VFX).
         """

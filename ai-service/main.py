@@ -22,6 +22,59 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 app = FastAPI(title="Ankece AI Service", description="Advanced Motion Recognition for Basketball")
 
+# Global dict to store job statuses
+jobs = {}
+
+def run_process_video_cv(job_id: str, payload: dict):
+    """Background task to process video CV and update job status."""
+    def update_progress(progress, message):
+        print(f"[JOB {job_id}] Progress: {progress}% - {message}")
+        jobs[job_id].update({"progress": progress, "message": message})
+
+    try:
+        print(f"🧵 Starting background thread for Job: {job_id}")
+        jobs[job_id] = {"status": "processing", "progress": 10, "message": "Initialisation du rendu..."}
+        # Correctly call the (now sync) process_video_cv with progress callback
+        result = process_video_cv(payload, progress_callback=update_progress)
+        
+        if result and isinstance(result, dict):
+            video_path = result.get("local_path")
+            orchestrator_url = result.get("orchestrator_url")
+            
+            has_video = video_path and os.path.exists(video_path)
+            has_draft = orchestrator_url and orchestrator_url.startswith('http')
+            
+            if has_video or has_draft:
+                jobs[job_id] = {
+                    "status": "completed",
+                    "progress": 100,
+                    "result": {
+                        "success": True,
+                        "filename": os.path.basename(video_path) if has_video else None,
+                        "path": f"/output/cv_videos/{os.path.basename(video_path)}" if has_video else None,
+                        "orchestrator_url": orchestrator_url if has_draft else None
+                    }
+                }
+                return
+
+        # Fallback if result is string or invalid
+        if isinstance(result, str) and (os.path.exists(result) or result.startswith('http')):
+             jobs[job_id] = {
+                "status": "completed",
+                "progress": 100,
+                "result": {
+                    "success": True,
+                    "filename": os.path.basename(result) if not result.startswith('http') else "CapCut_Draft",
+                    "path": result
+                }
+            }
+        else:
+            jobs[job_id] = {"status": "failed", "progress": 100, "message": "Video generation failed: No valid output produced"}
+            
+    except Exception as e:
+        print(f"[ERROR] Background task {job_id} failed: {str(e)}")
+        jobs[job_id] = {"status": "failed", "progress": 100, "message": str(e)}
+
 # Allow CORS for local development with Expo
 app.add_middleware(
     CORSMiddleware,
@@ -146,56 +199,35 @@ async def analyze_shot(file: UploadFile = File(...)):
     }
 
 @app.post("/generate-cv-video")
-async def generate_cv_video(data: CVPlayerData):
+async def generate_cv_video(data: CVPlayerData, background_tasks: BackgroundTasks):
     """
-    Endpoint to receive player data and trigger video CV generation.
-    Returns the result once finished.
+    Endpoint to receive player data and trigger video CV generation in background.
+    Returns a job_id immediately.
     """
-    print(f"Received Video CV request for {data.firstName} {data.lastName}")
-    payload = data.model_dump()
-    print(f"[PAYLOAD] keys: {list(payload.keys())}")
+    job_id = data.jobId or f"job_{int(time.time())}"
+    print(f"Received Video CV request for {data.firstName} {data.lastName} (Job: {job_id})")
     
-    try:
-        # result can now be a dict with local_path and orchestrator_url
-        result = await process_video_cv(payload)
-        
-        if result and isinstance(result, dict):
-            video_path = result.get("local_path")
-            orchestrator_url = result.get("orchestrator_url")
-            
-            # Check if we have at least one valid output
-            has_video = video_path and os.path.exists(video_path)
-            has_draft = orchestrator_url and orchestrator_url.startswith('http')
-            
-            if has_video or has_draft:
-                return {
-                    "success": True,
-                    "message": "CV generated successfully",
-                    "filename": os.path.basename(video_path) if has_video else None,
-                    "path": f"/output/cv_videos/{os.path.basename(video_path)}" if has_video else None,
-                    "orchestrator_url": orchestrator_url if has_draft else None
-                }
-        
-        # Fallback if result is a direct string (old behavior)
-        video_path = result if isinstance(result, str) else None
-        if video_path and (os.path.exists(video_path) or video_path.startswith('http')):
-            return {
-                "success": True,
-                "message": "CV generated successfully",
-                "filename": os.path.basename(video_path) if not video_path.startswith('http') else "CapCut_Draft",
-                "path": video_path
-            }
-        
-        return {
-            "success": False,
-            "message": "Video generation failed: No valid output produced"
-        }
-    except Exception as e:
-        print(f"[ERROR] In generate_cv_video: {str(e)}")
-        return {
-            "success": False,
-            "message": str(e)
-        }
+    payload = data.model_dump()
+    
+    # Initialize job status
+    jobs[job_id] = {"status": "queued", "progress": 0, "message": "En attente du serveur..."}
+    
+    # Start background task
+    background_tasks.add_task(run_process_video_cv, job_id, payload)
+    
+    return {
+        "success": True,
+        "message": "Generation started in background",
+        "job_id": job_id
+    }
+
+@app.get("/job-status/{job_id}")
+async def get_job_status(job_id: str):
+    """Returns the current status of a generation job."""
+    job = jobs.get(job_id)
+    if not job:
+        return {"success": False, "message": "Job not found"}
+    return {"success": True, **job}
 
 @app.post("/cancel-cv-generation/{job_id}")
 async def cancel_cv_generation(job_id: str):

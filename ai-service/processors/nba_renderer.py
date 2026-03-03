@@ -7,12 +7,8 @@ from moviepy.editor import *
 from moviepy.video.fx.all import *
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 from pillow_heif import register_heif_opener
-try:
-    import rembg
-    from rembg import remove
-    REMBG_AVAILABLE = True
-except ImportError:
-    REMBG_AVAILABLE = False
+# rembg is lazy-loaded in sequence_1_intro to speed up startup
+REMBG_AVAILABLE = True # Assume available, we'll check during lazy load
 
 register_heif_opener()
 
@@ -339,17 +335,16 @@ class NBAVideoRenderer:
         """
         duration = 10
         
-        # 1. DETOURAGE (Background Removal)
+        # 1. DETOURAGE (Background Removal) - Lazy loaded
         try:
-            if REMBG_AVAILABLE:
-                with open(photo_path, 'rb') as i:
-                    input_image = i.read()
-                    output_image = remove(input_image)
-                pil_photo = Image.open(io.BytesIO(output_image)).convert("RGBA")
-            else:
-                raise ImportError("rembg not available")
+            import rembg
+            from rembg import remove
+            with open(photo_path, 'rb') as i:
+                input_image = i.read()
+                output_image = remove(input_image)
+            pil_photo = Image.open(io.BytesIO(output_image)).convert("RGBA")
         except Exception as e:
-            print(f"Rembg failed or not ready: {e}. Falling back to standard image.")
+            print(f"Rembg lazy-load failed or first-run init: {e}. Falling back to standard image.")
             pil_photo = Image.open(photo_path).convert("RGBA")
         
         # Prepare fonts

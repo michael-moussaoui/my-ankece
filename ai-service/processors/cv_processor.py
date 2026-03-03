@@ -43,7 +43,7 @@ def download_file(url):
         logger.error(f"[ERROR] Failed to download {url}: {e}")
         return None
 
-async def process_video_cv(player_data: dict):
+def process_video_cv(player_data: dict, progress_callback=None):
     """
     Task to generate the premium NBA-style video CV.
     Returns the generated video path.
@@ -52,21 +52,23 @@ async def process_video_cv(player_data: dict):
     try:
         job_id = player_data.get('jobId', 'unknown')
         player_name = f"{player_data.get('firstName')} {player_data.get('lastName')}"
-        logger.info(f"🚀 Starting Premium Video CV generation for {player_name} (Job: {job_id})")
+        print(f"🚀 [JOB {job_id}] Starting Premium Video CV generation for {player_name}")
 
         # 0. Orchestrator (CapCut Draft)
+        if progress_callback: progress_callback(20, "Génération du brouillon CapCut...")
         orchestrator_url = None
         tier = player_data.get('tier')
         if tier:
             logger.info(f"[ORCHESTRATOR] Using tier: {tier}")
             orchestrator = VideoCVOrchestrator()
-            orchestrator_url = await orchestrator.generate_cv(player_data)
+            orchestrator_url = orchestrator.generate_cv(player_data)
             if orchestrator_url:
                 logger.info(f"[SUCCESS] CV Draft generated via Orchestrator: {orchestrator_url}")
             else:
                 logger.warning("[WARNING] Orchestrator failed to generate CV draft.")
         
         # Continue with local rendering...
+        if progress_callback: progress_callback(30, "Téléchargement des médias...")
         
         # Initialize renderer with custom colors if provided
         renderer = NBAVideoRenderer(
@@ -111,6 +113,7 @@ async def process_video_cv(player_data: dict):
              player_data['currentClub']['localLogoPath'] = local_club_logo
 
         # 1.5 AI Analysis (New Stage)
+        if progress_callback: progress_callback(50, "Analyse IA (Shoots & Dribbles)...")
         logger.info("[AI] Running Analysis (Shot & Dribble)...")
         ai_insights = []
         
@@ -154,6 +157,7 @@ async def process_video_cv(player_data: dict):
             })
 
         # 3. Assemble Full CV
+        if progress_callback: progress_callback(70, "Rendu vidéo final (NBA Style)...")
         logger.info("[RENDER] Rendering premium NBA-style video...")
         output_filename = f"CV_{player_data.get('lastName')}_{int(time.time())}.mp4"
         output_dir = "output/cv_videos"
@@ -170,7 +174,7 @@ async def process_video_cv(player_data: dict):
         )
             
         if final_path:
-            logger.info(f"✅ Premium Video CV generated: {final_path}")
+            print(f"✅ [JOB {job_id}] Premium Video CV generated: {final_path}")
             return {
                 "local_path": final_path,
                 "orchestrator_url": orchestrator_url

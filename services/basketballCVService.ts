@@ -118,11 +118,22 @@ export const basketballCVService = {
 
     /**
      * Polls or checks the status of a CV generation job.
-     * (To be implemented with a real status endpoint if needed)
      */
-    getJobStatus: async (jobId: string) => {
-        // Placeholder for status checks
-        return { status: 'processing', progress: 45 };
+    getJobStatus: async (jobId: string): Promise<any> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/job-status/${jobId}`);
+            if (!response.ok) {
+                throw new Error(`Status API Error: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('❌ Error checking job status:', error);
+            return {
+                success: false,
+                status: 'failed',
+                message: error instanceof Error ? error.message : 'Unknown status error',
+            };
+        }
     },
 
     /**
