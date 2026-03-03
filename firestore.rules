@@ -1,0 +1,282 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Règle pour vos utilisateurs : tout utilisateur authentifié peut LIRE les profils, mais seul l'auteur peut ÉCRIRE
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // RÈGLE pour le fil d'actualité
+    match /posts/{postId} {
+      // Tout le monde peut voir les vidéos
+      allow read: if true; 
+      // Seuls les utilisateurs connectés peuvent publier ou liker
+      allow write: if request.auth != null;
+    }
+    
+    // Autoriser l'accès aux CV basket si besoin
+    match /basketball_players/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+        // RÈGLES POUR LES NOTIFICATIONS
+    match /notifications/{notificationId} {
+      // Tout le monde peut lire les notifications (pour voir les broadcasts)
+      allow read: if request.auth != null;
+      
+      // Autoriser l'admin ou l'expéditeur de la notification
+      allow create: if request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         request.resource.data.senderId == request.auth.uid);
+        
+      // Les utilisateurs peuvent mettre à jour les listes readBy/archivedBy/deletedBy
+      allow update: if request.auth != null;
+      
+      // Personne ne peut supprimer physiquement une notification broadcast
+      allow delete: if false;
+    }
+
+    // RÈGLES POUR LES TERRAINS DE BASKET (PLAYGROUNDS)
+    match /playgrounds/{playgroundId} {
+      // Permettre de lire et d'écrire (create/update) les infos du terrain
+      allow read: if true;
+      allow create, update: if request.auth != null;
+
+      // Sous-collection des choix de style par utilisateur
+      match /userVibes/{userId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Sous-collection des images
+      match /images/{imageId} {
+        // Tout le monde peut voir les photos des terrains
+        allow read: if true;
+        
+        // Seuls les utilisateurs connectés peuvent ajouter des photos
+        // ET seulement si aucune photo n'existe déjà (une seule photo par terrain)
+        allow create: if request.auth != null && 
+                         request.resource.data.userId == request.auth.uid &&
+                         !exists(/databases/$(database)/documents/playgrounds/$(playgroundId)/images/$(imageId));
+        
+        // Seul l'admin peut supprimer une photo
+        allow delete: if request.auth != null && 
+                         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        
+        // Sous-collection des signalements
+        match /reports/{reportId} {
+          // Tout le monde peut lire les signalements (pour compter)
+          allow read: if true;
+          
+          // Seuls les utilisateurs connectés peuvent signaler
+          allow create: if request.auth != null && 
+                           request.resource.data.userId == request.auth.uid;
+          
+          // Personne ne peut modifier ou supprimer un signalement
+          allow update, delete: if false;
+        }
+      }
+
+      // Sous-collection des événements
+      match /events/{eventId} {
+        // Tout le monde peut voir les événements
+        allow read: if true;
+        
+        // Seuls les utilisateurs connectés peuvent proposer des événements (Simplifié pour debug)
+        allow create: if request.auth != null;
+        
+        // Le créateur ou l'admin peut modifier/supprimer
+        allow update, delete: if request.auth != null;
+      }
+    }
+
+    // COLLECTION CENTRALISÉE DES SIGNALEMENTS (pour dashboard admin)
+    match /photoReports/{reportId} {
+      // Seuls les admins peuvent lire tous les signalements
+      allow read: if request.auth != null && 
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Les utilisateurs connectés peuvent créer des signalements
+      allow create: if request.auth != null && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Personne ne peut modifier ou supprimer
+      allow update, delete: if false;
+    }
+
+    // RÈGLES POUR LES SUGGESTIONS DE TERRAINS
+    match /playground_suggestions/{suggestionId} {
+      // Tout le monde peut lire les suggestions approuvées
+      // Seul l'admin peut lire toutes les suggestions (y compris les pending/rejected)
+      allow read: if (request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') || 
+                   (resource.data.status == 'approved');
+      
+      // Seuls les utilisateurs connectés peuvent proposer un terrain
+      allow create: if request.auth != null && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.status == 'pending';
+      
+      // Seul l'admin peut valider, rejeter ou supprimer
+      allow update, delete: if request.auth != null && 
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // RÈGLES POUR LES COACHES
+    match /coaches/{coachId} {
+      // Les admins peuvent tout lire
+      // Les coachs peuvent lire leur propre fiche (même en attente/refusée)
+      // Les autres peuvent lire les fiches 'active'
+      allow read: if (request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' || resource.data.userId == request.auth.uid)) || 
+                   (resource.data.status == 'active');
+      
+      // Seuls les utilisateurs connectés peuvent créer leur fiche coach
+      allow create: if request.auth != null && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.status == 'pending';
+      
+      // Autoriser la mise à jour par l'admin, le propriétaire, ou tout utilisateur authentifié 
+      // si UNIQUEMENT pour mettre à jour la note moyenne et le nombre d'avis (transaction d'évaluation)
+      allow update: if request.auth != null && 
+                       (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' || 
+                        resource.data.userId == request.auth.uid ||
+                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'reviewCount', 'studentCount', 'updatedAt'])));
+
+      // Seul l'admin peut supprimer
+      allow delete: if request.auth != null && 
+                       get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // RÈGLES POUR LES RÉSERVATIONS (BOOKINGS)
+    match /bookings/{bookingId} {
+      // Un utilisateur authentifié peut lire s'il est le coach, le joueur ou si la session est disponible
+      allow read: if request.auth != null;
+
+      // Un coach peut créer ses sessions (on vérifie que l'UID de l'auth est bien l'ID utilisateur du coach)
+      allow create: if request.auth != null && 
+                       get(/databases/$(database)/documents/coaches/$(request.resource.data.coachId)).data.userId == request.auth.uid;
+
+      // Mise à jour (réservation ou annulation)
+      allow update: if request.auth != null && (
+        // Le coach peut tout modifier (ou annuler)
+        get(/databases/$(database)/documents/coaches/$(resource.data.coachId)).data.userId == request.auth.uid ||
+        // Un joueur peut réserver une session disponible
+        (resource.data.status == 'available' && 
+         request.resource.data.status == 'reserved' && 
+         request.resource.data.playerId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'playerId', 'playerName', 'updatedAt'])) ||
+        // Le joueur assigné peut annuler sa réservation (on lui permet de changer le status en cancelled)
+        (resource.data.playerId == request.auth.uid && 
+         request.resource.data.status == 'cancelled' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']))
+      );
+
+      // Seul le coach peut supprimer une session disponible
+      allow delete: if request.auth != null && 
+                       get(/databases/$(database)/documents/coaches/$(resource.data.coachId)).data.userId == request.auth.uid && 
+                       resource.data.status == 'available';
+    }
+
+    // RÈGLES POUR LES AVIS COACH
+    match /coach_reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // RÈGLES POUR LE BASKETBALL TRACKER
+    match /shooting_sessions/{sessionId} {
+      allow read: if true; 
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /dribble_sessions/{sessionId} {
+      allow read: if true; 
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /user_stats/{userId} {
+      allow read: if true; 
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // RÈGLES POUR LA GESTION DES ÉLÈVES
+    match /coach_students/{relationId} {
+      // Un utilisateur connecté peut lire et écrire les relations coach-élève
+      allow read, write: if request.auth != null;
+    }
+
+    // RÈGLES POUR LES CHALLENGES
+    match /challenges/{challengeId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+    }
+
+    match /challenge_participations/{participationId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+    }
+
+    // RÈGLES POUR LES DEMANDES DE CONNEXION (NETWORK)
+    match /connection_requests/{requestId} {
+      // Un utilisateur peut lire les demandes dont il est membre
+      allow read: if request.auth != null && 
+                   request.auth.uid in resource.data.members;
+      
+      // Un utilisateur peut créer une demande s'il est l'expéditeur et membre
+      allow create: if request.auth != null && 
+                      request.resource.data.fromId == request.auth.uid &&
+                      request.auth.uid in request.resource.data.members;
+      
+      // Un destinataire peut accepter/refuser, un expéditeur peut annuler
+      allow update: if request.auth != null && (
+        (request.auth.uid == resource.data.toId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])) ||
+        (request.auth.uid == resource.data.fromId && resource.data.status == 'pending')
+      );
+      
+      // Un expéditeur peut supprimer sa demande
+      allow delete: if request.auth != null && 
+                       request.auth.uid == resource.data.fromId;
+    }
+
+    // RÈGLES POUR LE CHAT (CONVERSATIONS & MESSAGES)
+    match /conversations/{conversationId} {
+      // Un utilisateur peut lire les conversations dont il est participant (ou si elle n'existe pas encore)
+      allow read: if request.auth != null && 
+                   (resource == null || request.auth.uid in resource.data.participants);
+      
+      // Un utilisateur peut créer une conversation s'il est participant
+      allow create: if request.auth != null && 
+                      request.auth.uid in request.resource.data.participants;
+      
+      // Un participant peut mettre à jour le dernier message et le compteur de non-lus
+      allow update: if request.auth != null && 
+                      request.auth.uid in resource.data.participants;
+
+      // Un participant peut supprimer la conversation
+      allow delete: if request.auth != null && 
+                       request.auth.uid in resource.data.participants;
+
+      // Sous-collection des messages
+      match /messages/{messageId} {
+        // Un participant de la conversation parente peut lire les messages
+        allow read: if request.auth != null && 
+                     (get(/databases/$(database)/documents/conversations/$(conversationId)).data != null &&
+                      request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants);
+        
+        // Un participant peut envoyer un message
+        allow create: if request.auth != null && 
+                        (get(/databases/$(database)/documents/conversations/$(conversationId)).data != null &&
+                         request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants) &&
+                        request.resource.data.senderId == request.auth.uid;
+
+        // Un participant peut supprimer un message
+        allow delete: if request.auth != null && 
+                         (get(/databases/$(database)/documents/conversations/$(conversationId)).data != null &&
+                          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants);
+      }
+    }
+  }
+}

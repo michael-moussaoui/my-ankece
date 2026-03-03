@@ -3,6 +3,7 @@
  */
 
 export interface MediaAsset {
+    id: string;
     uri: string;
     type: 'video' | 'image';
     duration?: number | null;
@@ -17,6 +18,7 @@ export interface MediaPickerProps {
     mediaType?: 'video' | 'image' | 'both';
     maxDuration?: number; // en secondes
     maxFileSize?: number; // en MB
+    color?: string;
 }
 
 export interface VideoMetadata {

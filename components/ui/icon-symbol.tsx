@@ -1,7 +1,7 @@
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
+import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
@@ -13,12 +13,36 @@ type IconSymbolName = keyof typeof MAPPING;
  * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
  * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
  */
-const MAPPING = {
+const MAPPING: Record<string, any> = {
   'house.fill': 'home',
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
-} as IconMapping;
+  'basketball.fill': 'sports-basketball',
+  'basketball': 'sports-basketball',
+  'gearshape.fill': 'settings',
+  'sun.max.fill': 'light-mode',
+  'moon.fill': 'dark-mode',
+  'desktopcomputer': 'computer',
+  'person.fill': 'person',
+  'bell.fill': 'notifications',
+  'info.circle.fill': 'info',
+  'questionmark.circle.fill': 'help',
+  'star.fill': 'star',
+  'lock.fill': 'admin-panel-settings',
+  'play.circle.fill': 'play-circle-outline',
+  'plus.circle.fill': 'add-circle-outline',
+  'heart.fill': 'favorite',
+  'heart': 'favorite-border',
+  'archivebox.fill': 'archive',
+  'trash.fill': 'delete',
+  'waveform.path.ecg': 'analytics',
+  'chart.bar.fill': 'bar-chart',
+  'bubble.left.and.bubble.right.fill': 'chat',
+  'location.fill': 'location-on',
+  'person.2.fill': 'people',
+  'chatbubbles': 'chat',
+} as any;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.

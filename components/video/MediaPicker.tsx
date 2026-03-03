@@ -1,3 +1,6 @@
+import { Colors } from '@/constants/theme';
+import { useAppTheme } from '@/context/ThemeContext';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { MediaAsset, MediaPickerProps } from '@/types/media';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
@@ -11,7 +14,11 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
   mediaType = 'video',
   maxDuration = 120,
   maxFileSize,
+  color,
 }) => {
+  const { accentColor } = useAppTheme();
+  const colorScheme = useColorScheme();
+  const tintColor = color || accentColor || Colors[colorScheme].tint;
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,18 +41,18 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
       setPermissionDenied(false);
 
       // Déterminer le type de média à sélectionner
-      let pickerMediaType: ImagePicker.MediaTypeOptions;
+      let pickerMediaTypes: string[];
       if (mediaType === 'video') {
-        pickerMediaType = ImagePicker.MediaTypeOptions.Videos;
+        pickerMediaTypes = ['videos'];
       } else if (mediaType === 'image') {
-        pickerMediaType = ImagePicker.MediaTypeOptions.Images;
+        pickerMediaTypes = ['images'];
       } else {
-        pickerMediaType = ImagePicker.MediaTypeOptions.All;
+        pickerMediaTypes = ['images', 'videos'];
       }
 
       // Ouvrir le sélecteur
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: pickerMediaType,
+        mediaTypes: pickerMediaTypes,
         allowsEditing: false,
         quality: 1,
         videoMaxDuration: maxDuration,
@@ -73,6 +80,7 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
         }
 
         const mediaAsset: MediaAsset = {
+          id: Date.now().toString(),
           uri: asset.uri,
           type: asset.type as 'video' | 'image',
           duration: asset.duration,
@@ -103,7 +111,11 @@ export const MediaPicker: React.FC<MediaPickerProps> = ({
     <View style={styles.container}>
       <TouchableOpacity
         testID="media-picker-button"
-        style={[styles.button, isLoading && styles.buttonDisabled]}
+        style={[
+          styles.button,
+          { backgroundColor: tintColor },
+          isLoading && styles.buttonDisabled
+        ]}
         onPress={pickMedia}
         disabled={isLoading}
         activeOpacity={0.7}
@@ -127,7 +139,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   button: {
-    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -141,7 +152,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonDisabled: {
-    backgroundColor: '#94C5F8',
     opacity: 0.6,
   },
   buttonText: {

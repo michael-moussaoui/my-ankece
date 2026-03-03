@@ -1,0 +1,38 @@
+diff --git a/node_modules/@tensorflow/tfjs-react-native/dist/camera/camera_stream.js b/node_modules/@tensorflow/tfjs-react-native/dist/camera/camera_stream.js
+index bbb60b6..2e487e9 100644
+--- a/node_modules/@tensorflow/tfjs-react-native/dist/camera/camera_stream.js
++++ b/node_modules/@tensorflow/tfjs-react-native/dist/camera/camera_stream.js
+@@ -14,11 +14,11 @@
+  * limitations under the License.
+  * =============================================================================
+  */
+-import * as React from 'react';
+-import { StyleSheet, PixelRatio, Platform, } from 'react-native';
+ import { Camera } from 'expo-camera';
+ import { GLView } from 'expo-gl';
+-import { fromTexture, renderToGLView, detectGLCapabilities } from './camera';
++import * as React from 'react';
++import { PixelRatio, Platform, StyleSheet, } from 'react-native';
++import { detectGLCapabilities, fromTexture, renderToGLView } from './camera';
+ const DEFAULT_AUTORENDER = true;
+ const DEFAULT_RESIZE_DEPTH = 3;
+ const DEFAULT_USE_CUSTOM_SHADERS_TO_RESIZE = false;
+@@ -251,8 +251,8 @@ CameraComponent) {
+                 const { rotation } = this.props;
+                 const width = PixelRatio.getPixelSizeForLayoutSize(cameraLayout.width);
+                 const height = PixelRatio.getPixelSizeForLayoutSize(cameraLayout.height);
+-                const isFrontCamera = this.camera.props.type === Camera.Constants.Type.front;
+-                const flipHorizontal = Platform.OS === 'ios' && isFrontCamera ? false : true;
++                const isFrontCamera = this.camera.props.facing === 'front' || (this.camera.props.type === (Camera.Constants && Camera.Constants.Type && Camera.Constants.Type.front));
++                const flipHorizontal = this.props.mirror !== undefined ? this.props.mirror : (Platform.OS === 'ios' && isFrontCamera ? false : true);
+                 renderToGLView(gl, cameraTexture, { width, height }, flipHorizontal, rotation);
+             };
+             return renderFunc.bind(this);
+@@ -276,6 +276,7 @@ CameraComponent) {
+                 autorender: null,
+                 onReady: null,
+                 rotation: 0,
++                mirror: null,
+             };
+             const tensorCameraPropKeys = Object.keys(tensorCameraPropMap);
+             const cameraProps = {};

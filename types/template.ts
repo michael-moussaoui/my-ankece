@@ -12,7 +12,7 @@ export type SportType =
     | 'athletics'
     | 'swimming'
     | 'cycling'
-    | 'other';
+    | 'all'; // Pour afficher tous les sports
 
 export interface TextElement {
     id: string;
@@ -60,6 +60,8 @@ export interface SportTemplate {
     };
     musicUrl?: string;
     duration: number; // durée par défaut en ms
+    tags?: string[]; // Tags pour la recherche
+    popularity?: number; // Score de popularité
 }
 
 export interface PlayerProfile {
@@ -69,4 +71,19 @@ export interface PlayerProfile {
     team?: string;
     stats?: Record<string, string | number>;
     photo?: string;
+}
+
+export interface TemplateSelectorProps {
+    onSelectTemplate: (template: SportTemplate) => void;
+    selectedSport?: SportType;
+    showPremiumOnly?: boolean;
+    onPreview?: (template: SportTemplate) => void;
+}
+
+export interface TemplateFilterProps {
+    selectedSport: SportType;
+    onSelectSport: (sport: SportType) => void;
+    showPremiumFilter?: boolean;
+    showPremiumOnly?: boolean;
+    onTogglePremium?: () => void;
 }
