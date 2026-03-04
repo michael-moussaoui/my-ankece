@@ -101,8 +101,11 @@ function InnerLayout() {
     if (!profile && accessingProtected) {
       // Redirect to the login page if the user is not authenticated and tries to access protected content
       router.replace('/(auth)/login');
-    } else if (profile && inAuthGroup) {
-      // Redirect to the tabs if the user is authenticated and trying to access auth screens
+    } else if (profile && !profile.language && segments[0] !== 'language-selection') {
+      // Redirect to language selection if authenticated but no language set
+      router.replace('/language-selection');
+    } else if (profile && profile.language && (inAuthGroup || segments[0] === 'language-selection')) {
+      // Redirect to the tabs if the user is authenticated and has language
       router.replace('/(tabs)');
     }
   }, [profile, loading, segments]);
@@ -119,6 +122,7 @@ function InnerLayout() {
         <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)/forgot-password" options={{ headerShown: false }} />
+        <Stack.Screen name="language-selection" options={{ headerShown: false }} />
         <Stack.Screen name="live-broadcast" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
       </Stack>

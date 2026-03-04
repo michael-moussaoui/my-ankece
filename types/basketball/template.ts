@@ -4,6 +4,12 @@
 
 import { MediaAsset } from '../media';
 
+export interface Achievement {
+    title: string;
+    year: string;
+    competition?: string;
+}
+
 export type CVTier = 'essentiel' | 'pro' | 'elite';
 
 export interface BasketballPlayerData {
@@ -12,7 +18,8 @@ export interface BasketballPlayerData {
     lastName: string;
     age: number;
     dateOfBirth?: string;
-    
+    language?: 'fr' | 'en';
+
     // Tier du CV
     tier?: CVTier;
 
@@ -33,6 +40,9 @@ export interface BasketballPlayerData {
     // Points forts
     strengths?: string[];
 
+    // Palmarès / Titres
+    achievements?: Achievement[];
+
     // Parcours
     currentClub: ClubInfo;
     clubHistory: ClubInfo[];
@@ -46,6 +56,9 @@ export interface BasketballPlayerData {
     phone?: string;
     instagram?: string;
     twitter?: string;
+    tiktok?: string;
+    youtube?: string;
+    snapchat?: string;
     facebook?: string;
 
     // Options Premium (Elite)

@@ -157,7 +157,7 @@ export default function BasketballDemoScreen() {
               }, 1000);
             } else if (statusResult.status === 'failed') {
               if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-              Alert.alert('Erreur', statusResult.message || "La génération a échoué");
+              Alert.alert(t('common.error'), statusResult.message || t('cv.error_msg'));
               setIsProcessing(false);
             }
           } else {
@@ -165,7 +165,7 @@ export default function BasketballDemoScreen() {
             if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
             console.error("❌ Job lost or not found:", statusResult.message);
             setIsProcessing(false);
-            Alert.alert('Erreur', "La connexion avec le serveur de génération a été perdue. Veuillez recommencer.");
+            Alert.alert(t('common.error'), t('cv.error_msg'));
           }
         }, 3000); // Poll every 3 seconds
 
@@ -173,12 +173,12 @@ export default function BasketballDemoScreen() {
         // mais ici c'est une fonction one-shot)
         // On pourrait stocker pollInterval dans une ref si besoin.
       } else {
-        throw new Error(startResult.message || "Impossible de démarrer la génération");
+        throw new Error(startResult.message || t('cv.error_msg'));
       }
     } catch (error) {
       console.error("Error generating CV:", error);
       setIsProcessing(false);
-      Alert.alert(t('common.error'), error instanceof Error ? error.message : "Erreur lors de la génération");
+      Alert.alert(t('common.error'), error instanceof Error ? error.message : t('cv.error_msg'));
     } finally {
       // Les timers de simulation sont déjà cleared ou gérés par pollInterval
     }
@@ -191,7 +191,7 @@ export default function BasketballDemoScreen() {
         if (intervalRef.current) clearInterval(intervalRef.current);
         if (msgIntervalRef.current) clearInterval(msgIntervalRef.current);
         setIsProcessing(false);
-        Alert.alert(t('cv.cancelled_title') || 'Annulé', t('cv.cancelled_msg') || 'La génération a été stoppée.');
+        Alert.alert(t('cv.cancelled_title'), t('cv.cancelled_msg'));
         setStep('form');
       } catch (error) {
         console.error("Error cancelling generation:", error);
@@ -232,17 +232,17 @@ export default function BasketballDemoScreen() {
       [
         {
           text: 'MP4 (1080p)',
-          onPress: () => Alert.alert('Info', t('cv.form.export_dev')),
+          onPress: () => Alert.alert(t('common.info'), t('cv.export_dev')),
         },
         {
           text: 'Instagram Story',
-          onPress: () => Alert.alert('Info', t('cv.form.export_dev')),
+          onPress: () => Alert.alert(t('common.info'), t('cv.export_dev')),
         },
         {
           text: 'TikTok',
-          onPress: () => Alert.alert('Info', t('cv.form.export_dev')),
+          onPress: () => Alert.alert(t('common.info'), t('cv.export_dev')),
         },
-        { text: t('cv.form.cancel'), style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
       ]
     );
   };
@@ -336,7 +336,7 @@ export default function BasketballDemoScreen() {
                     <View style={styles.templateCardHeader}>
                 <View style={styles.templateTitleRow}>
                   <ThemedText type="defaultSemiBold" style={styles.templateCardTitle}>
-                      {template.name}
+                      {t(`cv.templates.${template.tier === 'pro' ? 'pro' : template.tier === 'elite' ? 'elite' : 'essential'}.name`)}
                   </ThemedText>
                   {template.isPremium && (
                       <View style={[styles.premiumBadge, { backgroundColor: accentColor }]}>
@@ -346,7 +346,7 @@ export default function BasketballDemoScreen() {
                 </View>
                 </View>
                 <ThemedText style={styles.templateCardDescription}>
-                {template.description}
+                {t(`cv.templates.${template.tier === 'pro' ? 'pro' : template.tier === 'elite' ? 'elite' : 'essential'}.description`)}
                 </ThemedText>
                 <View style={styles.templateCardFeatures}>
                 <View style={styles.templateFeature}>
@@ -426,11 +426,11 @@ export default function BasketballDemoScreen() {
             <ActivityIndicator size="large" color={accentColor} />
             
             <ThemedText style={{ marginTop: 24, fontSize: 20, fontWeight: 'bold', color: 'white', textAlign: 'center' }}>
-              {isSubscribing ? "Initialisation du paiement..." : processingMessage}
+              {isSubscribing ? t('cv.form.packs.upgrade_needed') : processingMessage}
             </ThemedText>
             
             <ThemedText style={{ marginTop: 8, color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>
-              {isSubscribing ? "Veuillez patienter..." : t('cv.time_remaining', { time: timeRemaining })}
+              {isSubscribing ? t('common.loading') : t('cv.time_remaining', { time: timeRemaining })}
             </ThemedText>
 
             {!isSubscribing && (

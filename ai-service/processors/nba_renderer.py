@@ -699,7 +699,7 @@ class NBAVideoRenderer:
         if cancel_check and cancel_check(): return None
 
         # Export
-        final_video.write_videofile(output_path, fps=24, codec="libx264", audio=True, threads=4, preset='ultrafast', logger=None)
+        final_video.write_videofile(output_path, fps=24, codec="libx264", audio=True, threads=4, preset='ultrafast', ffmpeg_params=["-movflags", "faststart"], logger=None)
         return output_path
 
 if __name__ == "__main__":

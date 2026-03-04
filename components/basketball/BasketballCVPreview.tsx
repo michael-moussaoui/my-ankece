@@ -4,7 +4,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ExportOptions, useExport } from '@/services/export/exportService';
 import { BasketballVideoPreviewProps } from '@/types/basketball/template';
 import { Ionicons } from '@expo/vector-icons';
-import { ResizeMode, Video } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -51,6 +51,21 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0); 
+  
+  const videoPlayer = useVideoPlayer(generatedVideoUrl || '', (player) => {
+    player.loop = true;
+    if (isPlaying && (viewMode === 'video')) {
+      player.play();
+    }
+  });
+
+  // Sync video player with isPlaying
+  useEffect(() => {
+    if (viewMode === 'video') {
+       if (isPlaying) videoPlayer.play();
+       else videoPlayer.pause();
+    }
+  }, [isPlaying, viewMode]);
 
   const colorScheme = useColorScheme();
   const { accentColor } = useAppTheme();
@@ -191,7 +206,7 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
         ]
       );
     } catch (err) {
-      Alert.alert(t('common.error'), t('cv.form.export_error') || 'Export failed');
+      Alert.alert(t('common.error'), t('cv.form.contact.export_error'));
       console.error(err);
     }
   };
@@ -209,7 +224,7 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <ThemedText type="subtitle" style={styles.headerTitle}>{t('cv.form.preview')}</ThemedText>
+          <ThemedText type="subtitle" style={styles.headerTitle}>{t('cv.form.contact.preview')}</ThemedText>
           <ThemedText style={styles.headerSubtitle}>
             {playerData.firstName} {playerData.lastName}
           </ThemedText>
@@ -268,15 +283,12 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
             />
           ) : viewMode === 'video' && generatedVideoUrl ? (
             <View style={StyleSheet.absoluteFill}>
-              <Video
-                source={{ uri: generatedVideoUrl }}
+              <VideoView
+                player={videoPlayer}
                 style={StyleSheet.absoluteFill}
-                useNativeControls
-                resizeMode={ResizeMode.CONTAIN}
-                isLooping
-                shouldPlay={isPlaying}
-                onLoadStart={() => console.log("Video loading...")}
-                onError={(error) => console.error("Video error:", error)}
+                allowsFullscreen
+                allowsPictureInPicture
+                contentFit="contain"
               />
               {!isPlaying && (
                  <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -345,8 +357,8 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
               <Ionicons name={viewMode === 'template' ? (eliteDraftUrl ? "flash" : "videocam") : "layers"} size={20} color="#fff" />
               <ThemedText style={styles.toggleViewText}>
                 {viewMode === 'template' 
-                  ? (eliteDraftUrl ? "Voir Elite Draft" : "Voir Vidéo Réelle") 
-                  : "Voir Template"}
+                  ? (eliteDraftUrl ? t('cv.view_elite') : t('cv.view_real')) 
+                  : t('cv.view_template')}
               </ThemedText>
             </TouchableOpacity>
           )}
@@ -376,15 +388,15 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
               >
                   <View style={styles.statBadge}>
                      <ThemedText style={styles.statValue}>{playerData.stats.pointsPerGame}</ThemedText>
-                     <ThemedText style={styles.statLabel}>{t('cv.form.ppg')}</ThemedText>
+                     <ThemedText style={styles.statLabel}>{t('cv.form.steps.stats.ppg')}</ThemedText>
                   </View>
                   <View style={styles.statBadge}>
                      <ThemedText style={styles.statValue}>{playerData.stats.reboundsPerGame}</ThemedText>
-                     <ThemedText style={styles.statLabel}>{t('cv.form.rpg')}</ThemedText>
+                     <ThemedText style={styles.statLabel}>{t('cv.form.steps.stats.rpg')}</ThemedText>
                   </View>
                   <View style={styles.statBadge}>
                      <ThemedText style={styles.statValue}>{playerData.stats.assistsPerGame}</ThemedText>
-                     <ThemedText style={styles.statLabel}>{t('cv.form.apg')}</ThemedText>
+                     <ThemedText style={styles.statLabel}>{t('cv.form.steps.stats.apg')}</ThemedText>
                   </View>
               </Animated.View>
            )}
@@ -443,7 +455,7 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
                 onPress={handleRestart}
                 >
                 <Ionicons name="refresh" size={24} color="#fff" />
-                <ThemedText style={styles.restartThemedText}>{t('cv.form.replay')}</ThemedText>
+                <ThemedText style={styles.restartThemedText}>{t('cv.form.contact.replay')}</ThemedText>
                 </TouchableOpacity>
             </Animated.View>
           )}
@@ -633,7 +645,7 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
           ) : (
             <>
               <Ionicons name="download-outline" size={24} color="#fff" />
-              <ThemedText style={styles.exportButtonThemedText}>{t('cv.form.export_video')}</ThemedText>
+              <ThemedText style={styles.exportButtonThemedText}>{t('cv.form.contact.export_video')}</ThemedText>
             </>
           )}
         </TouchableOpacity>

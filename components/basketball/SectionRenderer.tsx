@@ -51,8 +51,8 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
 
   // Initialiser les lecteurs vidéo
   const offensivePlayer = useVideoPlayer(
-    section.type === 'offensive' && playerData.offensiveVideo
-      ? playerData.offensiveVideo.uri
+    section.type === 'offensive' && playerData.offensiveVideos?.[0]
+      ? playerData.offensiveVideos[0].uri
       : null,
     (player) => {
       if (player) {
@@ -63,8 +63,8 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
   );
 
   const defensivePlayer = useVideoPlayer(
-    section.type === 'defensive' && playerData.defensiveVideo
-      ? playerData.defensiveVideo.uri
+    section.type === 'defensive' && playerData.defensiveVideos?.[0]
+      ? playerData.defensiveVideos[0].uri
       : null,
     (player) => {
       if (player) {
@@ -107,10 +107,10 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
         }
     };
 
-    if (section.type === 'offensive' && offensivePlayer && playerData.offensiveVideo) {
+    if (section.type === 'offensive' && offensivePlayer && playerData.offensiveVideos?.[0]) {
         controlPlayer(offensivePlayer, isPlaying);
     }
-    if (section.type === 'defensive' && defensivePlayer && playerData.defensiveVideo) {
+    if (section.type === 'defensive' && defensivePlayer && playerData.defensiveVideos?.[0]) {
         controlPlayer(defensivePlayer, isPlaying);
     }
 
@@ -145,7 +145,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
   }));
 
   const getFieldValue = (field: keyof BasketballPlayerData | 'custom', label?: string): string => {
-    if (field === 'custom') return label || '';
+    if (field === 'custom') return label ? t(label) : '';
     const value = playerData[field];
     if (field === 'currentClub' && typeof value === 'object') return (value as ClubInfo).clubName;
     if (field === 'height' && value) return `${value} cm`;
@@ -186,8 +186,8 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
     const { x, y, width, height } = section.layout.videoPosition;
 
     let player = null;
-    if (section.type === 'offensive' && playerData.offensiveVideo && offensivePlayer) player = offensivePlayer;
-    else if (section.type === 'defensive' && playerData.defensiveVideo && defensivePlayer) player = defensivePlayer;
+    if (section.type === 'offensive' && playerData.offensiveVideos?.[0] && offensivePlayer) player = offensivePlayer;
+    else if (section.type === 'defensive' && playerData.defensiveVideos?.[0] && defensivePlayer) player = defensivePlayer;
 
     return (
       <Animated.View
@@ -255,7 +255,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
           {isElite && zone.field !== 'custom' && (
               <View style={[styles.aiVerifiedBadge, { backgroundColor: theme.primary }]}>
                   <Ionicons name="shield-checkmark" size={10} color="#000" />
-                  <Text style={styles.aiVerifiedText}>AI VERIFIED</Text>
+                  <Text style={styles.aiVerifiedText}>{t('cv.ai_verified')}</Text>
               </View>
           )}
         </Animated.Text>
@@ -296,9 +296,9 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
                     style={[styles.percentageContainer, { backgroundColor: theme.primary }]}
                 >
                     <Text style={[styles.percentageText, { color: theme.text }]}>
-                        {playerData.stats.fieldGoalPercentage ? `${t('cv.form.shot')}: ${playerData.stats.fieldGoalPercentage}%` : ''}
+                        {playerData.stats.fieldGoalPercentage ? `${t('cv.form.steps.stats.fg')}: ${playerData.stats.fieldGoalPercentage}%` : ''}
                         {playerData.stats.threePointPercentage ? ` • 3PT: ${playerData.stats.threePointPercentage}%` : ''}
-                        {playerData.stats.freeThrowPercentage ? ` • ${t('cv.form.free_throws')}: ${playerData.stats.freeThrowPercentage}%` : ''}
+                        {playerData.stats.freeThrowPercentage ? ` • ${t('cv.free_throws')}: ${playerData.stats.freeThrowPercentage}%` : ''}
                     </Text>
                 </Animated.View>
             )}
@@ -307,7 +307,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
   };
 
   const renderClubHistory = () => {
-    if (section.type !== 'history' || !playerData.clubHistory.length) return null;
+    if (section.id !== 'history' || !playerData.clubHistory.length) return null;
 
     return (
       <View style={styles.clubHistoryContainer}>
@@ -329,6 +329,31 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
     );
   };
 
+  const renderAchievements = () => {
+    if (section.id !== 'achievements' || !playerData.achievements?.length) return null;
+
+    return (
+      <View style={styles.achievementsContainer}>
+        {playerData.achievements.slice(0, 5).map((ach, index) => (
+          <Animated.View 
+            key={index} 
+            entering={FadeInRight.delay(300 + index * 150).springify()}
+            style={[styles.achievementCard, { backgroundColor: theme.background + 'CC', borderColor: theme.accent }]}
+          >
+            <View style={styles.achievementYearBox}>
+              <Text style={[styles.achievementYear, { color: theme.primary }]}>{ach.year}</Text>
+            </View>
+            <View style={styles.achievementContent}>
+              <Text style={styles.achievementTitle} numberOfLines={1}>{ach.title}</Text>
+              {ach.competition && <Text style={[styles.achievementComp, { color: theme.accent }]}>{ach.competition}</Text>}
+            </View>
+            <Ionicons name="trophy" size={20} color={theme.primary} style={styles.trophyIcon} />
+          </Animated.View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container} testID={`section-${section.id}`}>
       {renderBackground()}
@@ -336,6 +361,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
       {renderVideo()}
       {renderTextZones()}
       {renderClubHistory()}
+      {renderAchievements()}
       {renderStats()}
 
       {/* Flash Transition Layout */}
@@ -511,6 +537,51 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
+  achievementsContainer: {
+    position: 'absolute',
+    top: '20%',
+    left: '10%',
+    right: '10%',
+    gap: 12,
+  },
+  achievementCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  achievementYearBox: {
+    paddingRight: 15,
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.1)',
+    marginRight: 15,
+    minWidth: 50,
+    alignItems: 'center',
+  },
+  achievementYear: {
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  achievementContent: {
+    flex: 1,
+  },
+  achievementTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  achievementComp: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
+  trophyIcon: {
+    marginLeft: 10,
+  }
 });
-
-

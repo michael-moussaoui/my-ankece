@@ -52,10 +52,12 @@ def process_video_cv(player_data: dict, progress_callback=None):
     try:
         job_id = player_data.get('jobId', 'unknown')
         player_name = f"{player_data.get('firstName')} {player_data.get('lastName')}"
-        print(f"🚀 [JOB {job_id}] Starting Premium Video CV generation for {player_name}")
+        lang = player_data.get('language', 'fr')
+        msgs = MESSAGES.get(lang, MESSAGES['fr'])
+        print(f"🚀 [JOB {job_id}] Starting Premium Video CV generation for {player_name} ({lang})")
 
         # 0. Orchestrator (CapCut Draft)
-        if progress_callback: progress_callback(20, "Génération du brouillon CapCut...")
+        if progress_callback: progress_callback(20, msgs['drafting'])
         orchestrator_url = None
         tier = player_data.get('tier')
         if tier:
@@ -68,7 +70,7 @@ def process_video_cv(player_data: dict, progress_callback=None):
                 logger.warning("[WARNING] Orchestrator failed to generate CV draft.")
         
         # Continue with local rendering...
-        if progress_callback: progress_callback(30, "Téléchargement des médias...")
+        if progress_callback: progress_callback(30, msgs['downloading'])
         
         # Initialize renderer with custom colors if provided
         renderer = NBAVideoRenderer(
@@ -113,7 +115,7 @@ def process_video_cv(player_data: dict, progress_callback=None):
              player_data['currentClub']['localLogoPath'] = local_club_logo
 
         # 1.5 AI Analysis (New Stage)
-        if progress_callback: progress_callback(50, "Analyse IA (Shoots & Dribbles)...")
+        if progress_callback: progress_callback(50, msgs['analyzing'])
         logger.info("[AI] Running Analysis (Shot & Dribble)...")
         ai_insights = []
         
@@ -157,7 +159,7 @@ def process_video_cv(player_data: dict, progress_callback=None):
             })
 
         # 3. Assemble Full CV
-        if progress_callback: progress_callback(70, "Rendu vidéo final (NBA Style)...")
+        if progress_callback: progress_callback(70, msgs['rendering'])
         logger.info("[RENDER] Rendering premium NBA-style video...")
         output_filename = f"CV_{player_data.get('lastName')}_{int(time.time())}.mp4"
         output_dir = "output/cv_videos"

@@ -11,6 +11,7 @@ export interface UserProfile {
     position?: string;
     height?: string;
     plan: SubscriptionPlan;
+    language?: 'fr' | 'en';
     role: 'user' | 'admin';
     editsThisMonth: number;
     lastEditDate: string; // ISO string

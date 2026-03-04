@@ -10,7 +10,7 @@ export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
     thumbnail: 'https://via.placeholder.com/300x200/7c3aed/FFFFFF?text=Basketball+CV+Pro',
     isPremium: false,
     tier: 'pro',
-    totalDuration: 45000, 
+    totalDuration: 51000,
 
     theme: {
         primary: '#7c3aed', // Premium Violet
@@ -84,7 +84,7 @@ export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
                         fontSize: 16,
                         color: '#FFFFFF',
                         fontWeight: 'normal',
-                        label: 'ÂGE',
+                        label: 'cv.form.steps.identity.age',
                     },
                     {
                         id: 'age',
@@ -103,7 +103,7 @@ export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
                         fontSize: 16,
                         color: '#FFFFFF',
                         fontWeight: 'normal',
-                        label: 'TAILLE',
+                        label: 'cv.form.steps.identity.height',
                     },
                     {
                         id: 'height',
@@ -122,7 +122,7 @@ export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
                         fontSize: 16,
                         color: '#FFFFFF',
                         fontWeight: 'normal',
-                        label: 'POSTE',
+                        label: 'cv.form.steps.identity.position',
                     },
                     {
                         id: 'position',
@@ -141,7 +141,7 @@ export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
                         fontSize: 16,
                         color: '#FFFFFF',
                         fontWeight: 'normal',
-                        label: 'CLUB ACTUEL',
+                        label: 'cv.form.steps.identity.current_club',
                     },
                     {
                         id: 'club',
@@ -174,9 +174,32 @@ export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
                         color: '#00E5FF',
                         fontWeight: 'bold',
                         textAlign: 'center',
-                        label: 'PARCOURS',
+                        label: 'cv.form.steps.scouting.history_title',
                     },
                     // Les clubs seront ajoutés dynamiquement
+                ],
+            },
+        },
+        // 3.5 PALMARÈS
+        {
+            id: 'achievements',
+            type: 'history',
+            title: 'Palmarès',
+            duration: 6000,
+            backgroundColor: '#1a1a1a',
+            layout: {
+                textZones: [
+                    {
+                        id: 'achievements-title',
+                        field: 'custom',
+                        x: 50,
+                        y: 10,
+                        fontSize: 40,
+                        color: '#7c3aed',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        label: 'cv.form.steps.palmares.title',
+                    },
                 ],
             },
         },
@@ -200,7 +223,7 @@ export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
                         color: '#00E5FF',
                         fontWeight: 'bold',
                         textAlign: 'center',
-                        label: 'ATTAQUE',
+                        label: 'cv.form.steps.scouting.offensive_title',
                     },
                 ],
             },
@@ -225,7 +248,7 @@ export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
                         color: '#00E5FF',
                         fontWeight: 'bold',
                         textAlign: 'center',
-                        label: 'DÉFENSE',
+                        label: 'cv.form.steps.scouting.defensive_title',
                     },
                 ],
             },
@@ -249,7 +272,7 @@ export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
                         color: '#FFFFFF',
                         fontWeight: 'bold',
                         textAlign: 'center',
-                        label: 'MES STATS',
+                        label: 'cv.form.steps.stats.title',
                     },
                     // Les stats seront ajoutées dynamiquement
                 ],
@@ -268,7 +291,7 @@ export const BASKETBALL_SIMPLE_TEMPLATE: BasketballTemplate = {
     thumbnail: 'https://via.placeholder.com/300x200/0288D1/FFFFFF?text=Basketball+Simple',
     isPremium: false,
     tier: 'essentiel',
-    totalDuration: 30000, 
+    totalDuration: 30000,
 
     theme: {
         primary: '#0288D1',
@@ -367,7 +390,7 @@ export const BASKETBALL_AI_ELITE_TEMPLATE: BasketballTemplate = {
     thumbnail: 'https://via.placeholder.com/300x200/00E5FF/000000?text=AI+Elite+CV',
     isPremium: true,
     tier: 'elite',
-    totalDuration: 40000,
+    totalDuration: 46000,
 
     theme: {
         primary: '#FF8C00', // Professional Orange (Match backend accent)
@@ -401,7 +424,7 @@ export const BASKETBALL_AI_ELITE_TEMPLATE: BasketballTemplate = {
                         color: '#00E5FF',
                         fontWeight: 'bold',
                         textAlign: 'center',
-                        label: 'ANKece AI SCOUTING REPORT',
+                        label: 'cv.ai_scouting_report',
                         format: 'uppercase',
                     },
                     {
@@ -459,8 +482,8 @@ export const BASKETBALL_AI_ELITE_TEMPLATE: BasketballTemplate = {
                         fontWeight: 'bold',
                         label: '[ BIO_DATA ]',
                     },
-                    { id: 'age', field: 'age', x: 10, y: 30, fontSize: 32, color: '#FFFFFF', fontWeight: 'bold', label: 'AGE: ' },
-                    { id: 'height', field: 'height', x: 10, y: 40, fontSize: 32, color: '#FFFFFF', fontWeight: 'bold', label: 'HT: ' },
+                    { id: 'age', field: 'age', x: 10, y: 30, fontSize: 32, color: '#FFFFFF', fontWeight: 'bold', label: 'cv.form.steps.identity.age_short' },
+                    { id: 'height', field: 'height', x: 10, y: 40, fontSize: 32, color: '#FFFFFF', fontWeight: 'bold', label: 'cv.form.steps.identity.height_short' },
                     { id: 'pos', field: 'position', x: 10, y: 55, fontSize: 24, color: '#FF8C00', fontWeight: 'bold' },
                     { id: 'club', field: 'currentClub', x: 10, y: 75, fontSize: 20, color: '#B4B4BE', fontWeight: 'normal' },
                 ],
@@ -483,7 +506,30 @@ export const BASKETBALL_AI_ELITE_TEMPLATE: BasketballTemplate = {
                         color: '#B4B4BE',
                         fontWeight: 'bold',
                         textAlign: 'center',
-                        label: 'KEY PERFORMANCE INDICATORS',
+                        label: 'cv.form.steps.stats.kpi',
+                    },
+                ],
+            },
+        },
+        // AI PALMARÈS
+        {
+            id: 'achievements',
+            type: 'history',
+            title: 'Palmarès',
+            duration: 6000,
+            backgroundColor: '#090909',
+            layout: {
+                textZones: [
+                    {
+                        id: 'achievements-title',
+                        field: 'custom',
+                        x: 50,
+                        y: 10,
+                        fontSize: 40,
+                        color: '#FF8C00',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        label: 'cv.form.steps.palmares.title',
                     },
                 ],
             },
@@ -505,7 +551,7 @@ export const BASKETBALL_AI_ELITE_TEMPLATE: BasketballTemplate = {
                         fontSize: 18,
                         color: '#FF8C00',
                         fontWeight: 'bold',
-                        label: 'ATTACKING HIGHLIGHTS',
+                        label: 'cv.form.steps.scouting.offensive_highlights',
                     },
                 ],
             },
@@ -527,7 +573,7 @@ export const BASKETBALL_AI_ELITE_TEMPLATE: BasketballTemplate = {
                         fontSize: 18,
                         color: '#FF8C00',
                         fontWeight: 'bold',
-                        label: 'DEFENSIVE HIGHLIGHTS',
+                        label: 'cv.form.steps.scouting.defensive_highlights',
                     },
                 ],
             },

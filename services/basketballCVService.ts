@@ -30,7 +30,7 @@ export const basketballCVService = {
     generateVideoCV: async (playerData: BasketballPlayerData): Promise<CVGenerationResponse> => {
         try {
             console.log("📤 Uploading media to Cloudinary...");
-            
+
             // Upload separate files
             const profilePhotoUrl = playerData.profilePhoto?.uri ? await cloudinaryService.uploadImage(playerData.profilePhoto.uri) : null;
             const clubLogoUrl = playerData.currentClub.clubLogo?.uri ? await cloudinaryService.uploadImage(playerData.currentClub.clubLogo.uri) : null;
@@ -38,14 +38,14 @@ export const basketballCVService = {
 
             // Upload offensive videos in parallel
             const offensiveVideoUrls = await Promise.all(
-                (playerData.offensiveVideos || []).map(async (v) => 
+                (playerData.offensiveVideos || []).map(async (v) =>
                     v.uri ? await cloudinaryService.uploadVideo(v.uri) : null
                 )
             ).then(results => results.filter((url): url is string => !!url));
 
             // Upload defensive videos in parallel
             const defensiveVideoUrls = await Promise.all(
-                (playerData.defensiveVideos || []).map(async (v) => 
+                (playerData.defensiveVideos || []).map(async (v) =>
                     v.uri ? await cloudinaryService.uploadVideo(v.uri) : null
                 )
             ).then(results => results.filter((url): url is string => !!url));
@@ -87,6 +87,7 @@ export const basketballCVService = {
                 transitionType: playerData.transitionType || 'fade',
                 jobId: playerData.jobId || `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 tier: playerData.tier,
+                language: playerData.language || 'fr',
                 // Now using Cloudinary URLs
                 profilePhotoUrl,
                 offensiveVideoUrls,
