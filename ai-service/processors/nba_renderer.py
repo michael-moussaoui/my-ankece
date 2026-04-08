@@ -36,6 +36,11 @@ class NBAVideoRenderer:
         self.font_path = "C:/Windows/Fonts/arialbd.ttf" if os.path.exists("C:/Windows/Fonts/arialbd.ttf") else None
         self.font_path_main = "C:/Windows/Fonts/impact.ttf" if os.path.exists("C:/Windows/Fonts/impact.ttf") else self.font_path
         self.font_path_script = "C:/Windows/Fonts/segoesc.ttf" if os.path.exists("C:/Windows/Fonts/segoesc.ttf") else self.font_path
+        
+        # Paths for video assets (transitions, etc.)
+        self.base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.assets_dir = os.path.join(self.base_dir, "assets")
+        self.transitions_dir = os.path.join(self.assets_dir, "transitions")
 
     def _hex_to_rgb(self, hex_color):
         """Converts hex string (#RRGGBB) to RGB tuple."""
@@ -87,7 +92,7 @@ class NBAVideoRenderer:
         
         return ImageClip(np.array(img))
 
-    def sequence_3_highlights(self, player_data, video_path, title="HIGHLIGHTS", narration=""):
+    def sequence_3_highlights(self, player_data, video_path, title="HIGHLIGHTS", narration="", template_id="basketball-classic-nba"):
         """
         SÉQUENCE 3 — Vidéo Highlights (Durée de la vidéo)
         Intègre une vidéo avec des superpositions texte et branding.
@@ -111,6 +116,28 @@ class NBAVideoRenderer:
             base_clip = base_clip.resize(width=self.width)
             y_center = base_clip.h / 2
             base_clip = base_clip.crop(y_center=y_center, height=self.height)
+
+        # === APPLY TEMPLATE VFX ===
+        vfx_params = {
+            'basketball-classic-nba': {'lum': 5, 'contrast': 0.1, 'tint': None},
+            'basketball-street-ball': {'lum': 10, 'contrast': 0.3, 'tint': (255, 61, 0), 'opacity': 0.15},
+            'basketball-clean-pro': {'lum': 5, 'contrast': 0.2, 'tint': (255, 255, 255), 'opacity': 0.05},
+            'basketball-fire-mode': {'lum': 5, 'contrast': 0.4, 'tint': (255, 69, 0), 'opacity': 0.2},
+            'basketball-ice-cold': {'lum': 15, 'contrast': 0.3, 'tint': (0, 176, 255), 'opacity': 0.15},
+            'basketball-galaxy': {'lum': -5, 'contrast': 0.4, 'tint': (98, 0, 234), 'opacity': 0.2},
+            'basketball-champions-league': {'lum': 5, 'contrast': 0.3, 'tint': (197, 160, 89), 'opacity': 0.15},
+            'basketball-neon-city': {'lum': 10, 'contrast': 0.3, 'tint': (0, 200, 255), 'opacity': 0.15},
+            'basketball-cinematic': {'lum': 0, 'contrast': 0.5, 'tint': (0, 0, 0), 'opacity': 0.15},
+            'basketball-custom-brand': {'lum': 5, 'contrast': 0.2, 'tint': None}
+        }
+        params = vfx_params.get(template_id, vfx_params['basketball-classic-nba'])
+        try:
+            base_clip = base_clip.fx(vfx.lum_contrast, lum=params['lum'], contrast=params['contrast'])
+            if params.get('tint'):
+                tint = ColorClip(size=base_clip.size, color=params['tint']).set_opacity(params['opacity']).set_duration(duration)
+                base_clip = CompositeVideoClip([base_clip, tint])
+        except Exception as e:
+            print(f"VFX Error: {e}")
 
         # 1. OVERLAYS
         # Top Header Overlay
@@ -141,7 +168,7 @@ class NBAVideoRenderer:
         # Combine
         return CompositeVideoClip([base_clip, header_bg, footer_bg, title_clip, narration_clip, branding_clip])
 
-    def sequence_presentation(self, player_data, video_path):
+    def sequence_presentation(self, player_data, video_path, template_id="basketball-classic-nba"):
         """
         SÉQUENCE 4 — Présentation du Joueur (Discours)
         Vidéo face caméra du joueur avec son nom en overlay.
@@ -158,6 +185,27 @@ class NBAVideoRenderer:
         else:
             base_clip = base_clip.resize(width=self.width)
             base_clip = base_clip.crop(y_center=base_clip.h / 2, height=self.height)
+
+        # === APPLY TEMPLATE VFX ===
+        vfx_params = {
+            'basketball-classic-nba': {'lum': 0, 'contrast': 0.1, 'tint': None},
+            'basketball-street-ball': {'lum': 5, 'contrast': 0.2, 'tint': (255, 61, 0), 'opacity': 0.1},
+            'basketball-clean-pro': {'lum': 5, 'contrast': 0.1, 'tint': (255, 255, 255), 'opacity': 0.05},
+            'basketball-fire-mode': {'lum': 0, 'contrast': 0.3, 'tint': (255, 69, 0), 'opacity': 0.15},
+            'basketball-ice-cold': {'lum': 10, 'contrast': 0.2, 'tint': (0, 176, 255), 'opacity': 0.1},
+            'basketball-galaxy': {'lum': -5, 'contrast': 0.3, 'tint': (98, 0, 234), 'opacity': 0.15},
+            'basketball-champions-league': {'lum': 0, 'contrast': 0.2, 'tint': (197, 160, 89), 'opacity': 0.1},
+            'basketball-neon-city': {'lum': 5, 'contrast': 0.2, 'tint': (0, 200, 255), 'opacity': 0.1},
+            'basketball-cinematic': {'lum': 0, 'contrast': 0.4, 'tint': (0, 0, 0), 'opacity': 0.1},
+            'basketball-custom-brand': {'lum': 0, 'contrast': 0.2, 'tint': None}
+        }
+        params = vfx_params.get(template_id, vfx_params['basketball-classic-nba'])
+        try:
+            base_clip = base_clip.fx(vfx.lum_contrast, lum=params['lum'], contrast=params['contrast'])
+            if params.get('tint'):
+                tint = ColorClip(size=base_clip.size, color=params['tint']).set_opacity(params['opacity']).set_duration(duration)
+                base_clip = CompositeVideoClip([base_clip, tint])
+        except: pass
 
         # 1. NAME OVERLAY (Bottom)
         player_name = f"{player_data.get('firstName', '')} {player_data.get('lastName', '')}".upper()
@@ -336,16 +384,47 @@ class NBAVideoRenderer:
         duration = 10
         
         # 1. DETOURAGE (Background Removal) - Lazy loaded
-        try:
-            import rembg
-            from rembg import remove
-            with open(photo_path, 'rb') as i:
-                input_image = i.read()
-                output_image = remove(input_image)
-            pil_photo = Image.open(io.BytesIO(output_image)).convert("RGBA")
-        except Exception as e:
-            print(f"Rembg lazy-load failed or first-run init: {e}. Falling back to standard image.")
-            pil_photo = Image.open(photo_path).convert("RGBA")
+        pil_photo = None
+        if photo_path:
+            logger.info(f"[RENDER] Removing background from {photo_path}...")
+            print(f"  > Processing background removal for {os.path.basename(photo_path)}...")
+            try:
+                import rembg
+                from rembg import remove
+                with open(photo_path, 'rb') as i:
+                    input_image = i.read()
+                    output_image = remove(input_image)
+                pil_photo = Image.open(io.BytesIO(output_image)).convert("RGBA")
+            except Exception as e:
+                print(f"Rembg lazy-load failed or first-run init: {e}. Falling back to standard image.")
+                try:
+                    pil_photo = Image.open(photo_path).convert("RGBA")
+                except:
+                    pil_photo = None
+
+        # Fallback silhouette if no photo is provided or loading failed
+        if pil_photo is None:
+            try:
+                import requests
+                from io import BytesIO
+                # Default player photo
+                resp = requests.get("https://cdn.nba.com/headshots/nba/latest/1040x760/2544.png", timeout=5)
+                pil_photo = Image.open(BytesIO(resp.content)).convert("RGBA")
+            except Exception as e:
+                print(f"Failed to load default photo: {e}")
+                # Create a majestic player silhouette as last resort
+                pil_photo = Image.new("RGBA", (1000, 1200), (0, 0, 0, 0))
+                d = ImageDraw.Draw(pil_photo)
+                
+                # Draw shoulder/chest block
+                d.polygon([(100, 1200), (900, 1200), (700, 550), (300, 550)], fill=(25, 25, 28, 250))
+                # Draw neck area
+                d.rectangle([450, 450, 550, 600], fill=(25, 25, 28, 250))
+                # Draw head
+                d.ellipse([350, 200, 650, 500], fill=(25, 25, 28, 250))
+                
+                from PIL import ImageFilter
+                pil_photo = pil_photo.filter(ImageFilter.GaussianBlur(radius=3))
         
         # Prepare fonts
         font_huge = ImageFont.truetype(self.font_path_main, 280) if self.font_path_main else ImageFont.load_default()
@@ -368,73 +447,94 @@ class NBAVideoRenderer:
         position = player_data.get('position', '').upper()
 
         def make_frame(t):
-            # 1. Base Textured Dark Gray Background
-            frame = Image.new("RGBA", (self.width, self.height), (35, 35, 40, 255))
+            # 1. Base Image: White bottom
+            frame = Image.new("RGBA", (self.width, self.height), (245, 245, 250, 255))
             draw = ImageDraw.Draw(frame)
             
-            # Subtle purple texture/accents
-            draw.polygon([(0, 0), (600, 0), (0, 600)], fill=(60, 20, 100, 100)) # Top Left
-            draw.polygon([(self.width, 1400), (self.width-500, self.height), (self.width, self.height)], fill=(50, 20, 110, 80)) # Bottom Right
-
-            # 2. Layer 1: BACK PLAYER (Blurred + Desaturated)
-            bg_scale = 1.3 + 0.05 * (t / duration)
-            bg_h = int(self.height * 0.9 * bg_scale)
-            aspect = pil_photo.width / pil_photo.height
-            bg_w = int(bg_h * aspect)
-            back_photo = pil_photo.resize((bg_w, bg_h), Image.Resampling.LANCZOS)
+            # 2. Upper Dark Zone (0 to 1200)
+            draw.rectangle([0, 0, self.width, 1200], fill=(20, 20, 24, 255))
             
-            # Blur and Lower Opacity
-            back_photo = back_photo.filter(ImageFilter.GaussianBlur(radius=10))
-            alpha = back_photo.getchannel('A')
-            alpha = alpha.point(lambda p: p * 0.3) # 30% opacity
-            back_photo.putalpha(alpha)
+            # 3. Subtle Geometric Angles in Upper Zone
+            draw.polygon([(0, 0), (self.width*0.8, 0), (0, 800)], fill=(30, 30, 35, 255))
             
-            frame.paste(back_photo, ((self.width - bg_w) // 2, 50), back_photo)
+            # 4. The Splash / Slash Separator (Template Primary Color)
+            # Default to Cyan if no primary color
+            primary_color = self.COLORS.get('primary', (0, 229, 255))
+            draw.polygon([(0, 1170), (self.width, 1100), (self.width, 1230), (0, 1250)], fill=primary_color)
+            
+            # 5. Left "Jersey Patch" Window (Stats Dashboard)
+            patch_top = 400
+            patch_bottom = 900
+            patch_left = 60
+            patch_right = 450
+            draw.rectangle([patch_left, patch_top, patch_right, patch_bottom], fill=(15, 15, 18, 255), outline=(192, 192, 192, 255), width=4)
+            
+            stats = player_data.get('stats') or {}
+            pts = stats.get('pointsPerGame', '0.0')
+            reb = stats.get('reboundsPerGame', '0.0')
+            ast = stats.get('assistsPerGame', '0.0')
+            
+            draw.text((patch_left + 40, patch_top + 50), "PTS", font=font_small, fill=primary_color)
+            draw.text((patch_left + 40, patch_top + 90), str(pts), font=font_first_name, fill=(255, 255, 255, 255))
+            
+            draw.text((patch_left + 40, patch_top + 220), "REB", font=font_small, fill=primary_color)
+            draw.text((patch_left + 40, patch_top + 260), str(reb), font=font_first_name, fill=(255, 255, 255, 255))
+            
+            draw.text((patch_left + 40, patch_top + 390), "AST", font=font_small, fill=primary_color)
+            draw.text((patch_left + 40, patch_top + 430), str(ast), font=font_first_name, fill=(255, 255, 255, 255))
 
-            # 3. VERTICAL LAST NAME (Right Side)
-            # Create a vertical name surface
-            v_chars = list(last_name)
-            v_text = "\n".join(v_chars)
-            # We'll use a rotated Impact text for the "HALLMAN" look
-            v_surf = Image.new("RGBA", (1800, 400), (0, 0, 0, 0))
+            # RC Logo (Rookie/Pro/Elite Badge)
+            tier_badge = player_data.get('tier', 'PRO').upper()
+            draw.polygon([(patch_right - 80, patch_bottom - 70), (patch_right - 20, patch_bottom - 70), (patch_right - 50, patch_bottom - 20)], fill=(255, 255, 255, 255))
+            draw.text((patch_right - 65, patch_bottom - 60), tier_badge[:2], font=font_small, fill=(20, 20, 24, 255))
+            
+            # 6. Typography: Top Series Name
+            tier_name = player_data.get('tier', 'pro')
+            series_title = "PANINI ELEGANCE" if tier_name == "elite" else "PRO PROSPECT"
+            t_bbox = draw.textbbox((0, 0), series_title, font=font_details)
+            draw.text(((self.width - (t_bbox[2] - t_bbox[0])) // 2, 80), series_title, font=font_details, fill=(200, 200, 200, 255))
+
+            # 7. Typography: Vertical Team Name
+            team_name = current_club.get('clubName', 'FREE AGENT').upper()
+            team_chars = "  ".join(list(team_name))
+            v_surf = Image.new("RGBA", (1400, 100), (0, 0, 0, 0))
             v_draw = ImageDraw.Draw(v_surf)
-            # Spacing between letters for vertical look
-            spaced_name = "  ".join(v_chars)
-            v_draw.text((0, 0), spaced_name, font=font_name_vertical, fill=(255, 255, 255, 200)) # Semi-transparent white
-            v_surf = v_surf.rotate(90, expand=True)
-            # Paste on the right edge
-            frame.alpha_composite(v_surf, (self.width - 320, (self.height - v_surf.height) // 2))
+            v_draw.text((0, 0), team_chars, font=font_small, fill=primary_color)
+            v_surf = v_surf.rotate(-90, expand=True)
+            frame.alpha_composite(v_surf, (self.width - 120, 200))
 
-            # 4. Layer 2: FRONT PLAYER (Sharp + Zoom)
-            fg_scale = 0.85 + 0.1 * (t / duration)
-            target_h = int(self.height * 0.75 * fg_scale)
+            # 8. Layer: Player Cutout Overlapping
+            fg_scale = 0.95 + 0.05 * (t / duration)
+            aspect = pil_photo.width / pil_photo.height
+            target_h = int(self.height * 0.70 * fg_scale)
             target_w = int(target_h * aspect)
             front_photo = pil_photo.resize((target_w, target_h), Image.Resampling.LANCZOS)
             
-            fx = (self.width - front_photo.width) // 2
-            fy = self.height - front_photo.height - 150 # Positioned near bottom
+            # Right aligned, overlapping the middle slash
+            fx = self.width - front_photo.width - 20
+            fy = int(1200 - (target_h * 0.6))
             frame.paste(front_photo, (fx, fy), front_photo)
 
-            # 5. TYPOGRAPHY
-            # Large Number Top-Left
-            draw.text((80, 80), f"#{number}", font=font_huge, fill=(255, 255, 255, 255))
+            # 9. Bottom Nameplate 
+            nameplate_y = 1450
+            t_bbox = draw.textbbox((0, 0), f"[ {first_name} ]", font=font_details)
+            w_first = t_bbox[2] - t_bbox[0]
+            draw.text(((self.width - w_first) // 2, nameplate_y), f"[ {first_name} ]", font=font_details, fill=primary_color)
             
-            # Profile Bottom-Left
-            info_y = 1550
-            draw.text((80, info_y), first_name, font=font_first_name, fill=(255, 255, 255, 255))
-            draw.text((80, info_y + 110), class_of, font=font_details, fill=(255, 255, 255, 255))
-            draw.text((80, info_y + 180), position, font=font_details, fill=(255, 255, 255, 255))
+            # Limit last name size if it's too long
+            last_name_disp = last_name[:12]
+            t_bbox2 = draw.textbbox((0, 0), last_name_disp, font=font_huge)
+            w_last = t_bbox2[2] - t_bbox2[0]
+            
+            # If name is still too wide, dynamically reduce font (approximation by scaling)
+            # but we just scale the offset, it might clip. In real life we calculate font size dynamically.
+            name_x = (self.width - w_last) // 2
+            if name_x < 0: name_x = 20
+            draw.text((name_x, nameplate_y + 80), last_name_disp, font=font_huge, fill=(20, 20, 24, 255))
 
-            # Branding Bottom-Right
-            draw.text((self.width - 320, 1800), "2025", font=font_small, fill=(255, 255, 255, 150))
-            draw.text((self.width - 320, 1850), "1st Edition", font=font_small, fill=(255, 255, 255, 150))
-            
-            # Vertical FFBB Branding (Faded on the left)
-            ffbb_surf = Image.new("RGBA", (800, 60), (0, 0, 0, 0))
-            ffbb_draw = ImageDraw.Draw(ffbb_surf)
-            ffbb_draw.text((0, 0), "FFBB - CHAMPIONNAT DE FRANCE", font=font_small, fill=(255, 255, 255, 80))
-            ffbb_surf = ffbb_surf.rotate(90, expand=True)
-            frame.alpha_composite(ffbb_surf, (20, (self.height - ffbb_surf.height) // 2))
+            # Additional subtle details
+            draw.text((80, self.height - 100), f"POSITION // {position}", font=font_small, fill=(150, 150, 150, 255))
+            draw.text((self.width - 400, self.height - 100), class_of, font=font_small, fill=(150, 150, 150, 255))
 
             return np.array(frame.convert("RGB")).astype('uint8')
 
@@ -544,8 +644,6 @@ class NBAVideoRenderer:
 
             return np.array(frame.convert("RGB")).astype('uint8')
 
-        return VideoClip(make_frame, duration=duration)
-
     def sequence_club_history(self, player_data):
         """
         SÉQUENCE 3 — Historique des Clubs (6 sec)
@@ -563,9 +661,12 @@ class NBAVideoRenderer:
         current_club = player_data.get('currentClub', {})
         club_name = current_club.get('clubName', 'N/A')
         club_logo_url = current_club.get('logoUrl') # Hypothetical URL
+        local_logo_path = current_club.get('localLogoPath')
         
         pil_logo = None
-        if club_logo_url:
+        if local_logo_path and os.path.exists(local_logo_path):
+             pil_logo = Image.open(local_logo_path).convert("RGBA")
+        elif club_logo_url:
             try:
                 import requests
                 from io import BytesIO
@@ -636,6 +737,88 @@ class NBAVideoRenderer:
 
         return VideoClip(make_frame, duration=duration)
 
+    def sequence_achievements(self, player_data):
+        """
+        SÉQUENCE 2.8 — Palmarès & Récompenses (6 sec)
+        Affiche les trophées et distinctions du joueur.
+        """
+        duration = 6
+        font_title = ImageFont.truetype(self.font_path_main, 70) if self.font_path_main else ImageFont.load_default()
+        font_achieve = ImageFont.truetype(self.font_path_main, 50) if self.font_path_main else ImageFont.load_default()
+        font_small = ImageFont.truetype(self.font_path, 35) if self.font_path else ImageFont.load_default()
+
+        achievements = player_data.get('achievements', [])
+        if not achievements:
+            # Fallback if no achievements, show a generic "WORK HARD" message
+            achievements = [{"title": "DEDICATED ATHLETE", "year": "2025", "competition": "WORK ETHIC"}]
+
+        def make_frame(t):
+            frame = Image.new("RGBA", (self.width, self.height), (30, 20, 40, 255))
+            draw = ImageDraw.Draw(frame)
+            draw.polygon([(0, 0), (self.width, 0), (0, 400)], fill=(80, 40, 120, 100))
+            
+            title_text = "CAREER ACHIEVEMENTS"
+            t_bbox = draw.textbbox((0, 0), title_text, font=font_title)
+            draw.text(((self.width - (t_bbox[2] - t_bbox[0])) // 2, 100), title_text, font=font_title, fill=self.COLORS['accent_gold'])
+
+            for i, ach in enumerate(achievements[:4]):
+                alpha = int(min(255, max(0, (t - 0.5 - i*0.4) * 400)))
+                y_pos = 350 + i * 250
+                
+                # Draw Card
+                draw.rounded_rectangle([100, y_pos, self.width - 100, y_pos + 200], radius=15, fill=(50, 50, 70, alpha // 2), outline=(255, 215, 0, alpha), width=2)
+                
+                # Achievement Title
+                draw.text((150, y_pos + 30), ach.get('title', '').upper(), font=font_achieve, fill=(255, 255, 255, alpha))
+                # Year & Competition
+                sub_text = f"{ach.get('year', '')} | {ach.get('competition', '')}"
+                draw.text((150, y_pos + 110), sub_text.upper(), font=font_small, fill=(200, 200, 220, alpha))
+            
+            return np.array(frame.convert("RGB")).astype('uint8')
+
+        return VideoClip(make_frame, duration=duration)
+
+    def sequence_ai_insights(self, player_data):
+        """
+        SÉQUENCE 2.9 — AI Scouting Insights (8 sec)
+        Visualisation cinématique des rapports d'analyse IA.
+        """
+        duration = 8
+        font_title = ImageFont.truetype(self.font_path_main, 80) if self.font_path_main else ImageFont.load_default()
+        font_insight = ImageFont.truetype(self.font_path_main, 55) if self.font_path_main else ImageFont.load_default()
+        font_small = ImageFont.truetype(self.font_path, 40) if self.font_path else ImageFont.load_default()
+
+        insights = player_data.get('ai_insights', [])
+        if not insights:
+            insights = ["Advanced Shot Mechanics Verified", "High IQ Playmaker Potential", "Elite Defensive Transition"]
+
+        def make_frame(t):
+            frame = Image.new("RGBA", (self.width, self.height), (10, 15, 25, 255))
+            draw = ImageDraw.Draw(frame)
+            
+            # Holographic scan effect
+            scan_y = int((t % 2) / 2 * self.height)
+            draw.rectangle([0, scan_y, self.width, scan_y + 5], fill=(0, 255, 255, 100))
+            
+            title_text = "AI SCOUTING REPORT"
+            t_bbox = draw.textbbox((0, 0), title_text, font=font_title)
+            draw.text(((self.width - (t_bbox[2] - t_bbox[0])) // 2, 150), title_text, font=font_title, fill=(0, 229, 255))
+
+            for i, insight in enumerate(insights[:5]):
+                alpha = int(min(255, max(0, (t - 1.0 - i*0.8) * 400)))
+                y_pos = 450 + i * 180
+                
+                # Floating Insight Line
+                draw.text((150, y_pos), f"> {insight.upper()}", font=font_insight, fill=(255, 255, 255, alpha))
+                draw.rectangle([150, y_pos + 80, self.width - 150, y_pos + 82], fill=(0, 255, 255, alpha // 3))
+
+            # Bottom Badge
+            draw.text((self.width // 2 - 150, 1750), "ANKECE AI VERIFIED", font=font_small, fill=(0, 255, 255, 150))
+            
+            return np.array(frame.convert("RGB")).astype('uint8')
+
+        return VideoClip(make_frame, duration=duration)
+
     def assemble_full_cv(self, player_data, highlights_videos, presentation_video=None, output_path="final_video_cv.mp4", cancel_check=None):
         """
         Assemble toutes les séquences en un seul Video CV professionnel.
@@ -644,8 +827,25 @@ class NBAVideoRenderer:
         """
         if cancel_check and cancel_check(): return None
 
-        transition_type = player_data.get('transitionType', 'fade')
+        tier = player_data.get('tier', 'essentiel').lower()
+        template_id = player_data.get('templateId', 'basketball-classic-nba')
+        
+        # Deduce main transition type based on template
+        default_ttype = 'fade'
+        if 'fire' in template_id or 'street' in template_id: default_ttype = 'flash'
+        elif 'neon' in template_id: default_ttype = 'glitch'
+        elif 'champions' in template_id: default_ttype = 'slide'
+        elif 'galaxy' in template_id or 'custom' in template_id: default_ttype = 'zoom'
+        
+        transition_type = player_data.get('transitionType', default_ttype)
         transition_duration = 0.5 # Default transition duration
+        
+        # Check if we should use a Video Stinger (Transition Clip)
+        stinger_video = self._get_stinger(template_id)
+        if stinger_video:
+            print(f"[RENDER] Found video stinger for template '{template_id}': {os.path.basename(stinger_video)}")
+            transition_type = 'stinger'
+            # Adjust duration based on stinger if needed, but crossfade usually stays 0.5
         
         clips = []
         
@@ -658,24 +858,37 @@ class NBAVideoRenderer:
         # 1. Intro
         photo_path = player_data.get('profilePhotoLocalPath')
         if photo_path and os.path.exists(photo_path):
+            print(f"[RENDER] Step 1/5: Generating Intro Sequence...")
             if not add_clip(self.sequence_1_intro(player_data, photo_path)): return None
         
         # 2. Stats
+        print(f"[RENDER] Step 2/5: Generating Stats and History Sequences...")
         if not add_clip(self.sequence_2_stats(player_data)): return None
 
         # 2.5 Club History
         if not add_clip(self.sequence_club_history(player_data)): return None
         
+        # 2.8 Achievements (Pro & Elite Only)
+        if tier in ['pro', 'elite']:
+            if not add_clip(self.sequence_achievements(player_data)): return None
+            
+        # 2.9 AI Scouting Report (Elite Only)
+        if tier == 'elite':
+            if not add_clip(self.sequence_ai_insights(player_data)): return None
+        
         # 3. Highlights
+        print(f"[RENDER] Step 3/5: Adding {len(highlights_videos)} highlights...")
         for h in highlights_videos:
             if os.path.exists(h['path']):
-                if not add_clip(self.sequence_3_highlights(player_data, h['path'], h.get('title', 'HIGHLIGHTS'), h.get('narration', ''))): return None
+                if not add_clip(self.sequence_3_highlights(player_data, h['path'], h.get('title', 'HIGHLIGHTS'), h.get('narration', ''), template_id)): return None
         
         # 4. Presentation
         if presentation_video and os.path.exists(presentation_video):
-            if not add_clip(self.sequence_presentation(player_data, presentation_video)): return None
+            print(f"[RENDER] Step 4/5: Adding Presentation Sequence...")
+            if not add_clip(self.sequence_presentation(player_data, presentation_video, template_id)): return None
             
         # 5. Outro
+        print(f"[RENDER] Step 5/5: Generating Outro Sequence...")
         if not add_clip(self.sequence_4_outro(player_data)): return None
         
         if cancel_check and cancel_check(): return None
@@ -687,20 +900,87 @@ class NBAVideoRenderer:
                 if transition_type == 'fade':
                     clip = clip.crossfadein(transition_duration)
                 elif transition_type == 'zoom':
-                    # Simplified zoom transition: fade + initial scale if possible (complex in moviepy for multiple clips)
+                    # Simulated whip pan / zoom in
+                    clip = clip.crossfadein(transition_duration * 0.5)
+                elif transition_type == 'flash':
+                    # White flash transition
+                    white_flash = ColorClip(size=(self.width, self.height), color=(255, 255, 255), duration=0.15).set_opacity(0.8)
+                    clip = CompositeVideoClip([clip.crossfadein(0.1), white_flash.set_start(0)])
+                elif transition_type == 'slide':
+                    # Simple slide effect via crossfade for now (Wipe transitions require masks)
+                    clip = clip.crossfadein(transition_duration)
+                elif transition_type == 'glitch':
+                    # Very fast flash
+                    clip = clip.crossfadein(0.1)
+                elif transition_type == 'swish':
+                    # Simulated swish/blur
+                    clip = clip.crossfadein(0.3)
+                elif transition_type == 'stinger' and stinger_video:
+                    # Video Stinger Transition
+                    # We will handle this during concatenation for better timing
+                    pass
+                else: # Default
                     clip = clip.crossfadein(transition_duration)
             processed_clips.append(clip)
 
         # Concatenate everything
-        # Use method="compose" to handle different sizes/transitions correctly
-        final_video = concatenate_videoclips(processed_clips, method="compose", padding=-transition_duration if transition_type != 'none' else 0)
+        print(f"[RENDER] Concatenating {len(processed_clips)} clips with '{transition_type}'...")
+        
+        if transition_type == 'stinger' and stinger_video:
+            # INTERLEAVED VIDEO TRANSITIONS
+            final_clips = []
+            stinger_clip = VideoFileClip(stinger_video).resize(height=self.height)
+            
+            for i, clip in enumerate(processed_clips):
+                final_clips.append(clip)
+                if i < len(processed_clips) - 1:
+                    # Add stinger between clips
+                    final_clips.append(stinger_clip.copy().set_start(0))
+            
+            final_video = concatenate_videoclips(final_clips, method="compose")
+        else:
+            padding = -transition_duration if transition_type in ['fade', 'zoom', 'slide'] else -0.1
+            if transition_type == 'none': padding = 0
+            final_video = concatenate_videoclips(processed_clips, method="compose", padding=padding)
         
         # Final cancellation check before export
         if cancel_check and cancel_check(): return None
+        
+        print(f"[RENDER] Starting final export to {output_path} (threads=1, preset=ultrafast)...")
 
-        # Export
-        final_video.write_videofile(output_path, fps=24, codec="libx264", audio=True, threads=4, preset='ultrafast', ffmpeg_params=["-movflags", "faststart"], logger=None)
+        # Export (Reduced to 1 thread for stability on Windows if hanging)
+        final_video.write_videofile(
+            output_path, 
+            fps=24, 
+            codec="libx264", 
+            audio=True, 
+            threads=1, 
+            preset='ultrafast', 
+            ffmpeg_params=["-movflags", "faststart"], 
+            logger='bar'
+        )
         return output_path
+
+    def _get_stinger(self, template_id):
+        """
+        Looks for a transition video in assets/transitions/<category>/.
+        Category is deduced from template_id (fire, neon, classic, etc.).
+        """
+        category = "classic"
+        if "fire" in template_id or "street" in template_id: category = "fire_mode"
+        elif "neon" in template_id: category = "neon"
+        elif "galaxy" in template_id: category = "galaxy"
+        
+        category_dir = os.path.join(self.transitions_dir, category)
+        if not os.path.exists(category_dir):
+            return None
+            
+        import random
+        files = [f for f in os.listdir(category_dir) if f.endswith(('.mp4', '.mov', '.avi'))]
+        if not files:
+            return None
+            
+        return os.path.join(category_dir, random.choice(files))
 
 if __name__ == "__main__":
     # Internal Render Test

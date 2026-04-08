@@ -20,84 +20,82 @@ class DribbleDetector:
         
         # State tracking
         self.dribble_count = 0
-        self.last_y = [0.5, 0.5] # For left and right hands
-        self.direction = [0, 0] # -1 for down, 1 for up
-        self.moves = [] # List of detected specialized moves
-        self.last_hand = None # To track crossovers
+        self.last_y = [0.5, 0.5] # Left (0), Right (1)
+        self.direction = [0, 0] # -1 down, 1 up
+        self.moves = []
+        self.last_hand = None
 
     def process_frame(self, frame):
+        h, w, _ = frame.shape
         image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        hand_results = self.hands.process(image_rgb)
+        
+        # 1. Pose Analysis (Posture context)
         pose_results = self.pose.process(image_rgb)
-        
-        current_data = {
-            "hands": [],
-            "pose": None
-        }
-        
+        waist_y = 0.6 # Fallback
+        if pose_results.pose_landmarks:
+            l = pose_results.pose_landmarks.landmark
+            waist_y = (l[self.mp_pose.PoseLandmark.LEFT_HIP].y + l[self.mp_pose.PoseLandmark.RIGHT_HIP].y) / 2
+
+        # 2. Ball Tracking (Heuristic: Orange color)
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        lower_orange = np.array([5, 100, 100])
+        upper_orange = np.array([25, 255, 255])
+        mask = cv2.inRange(hsv, lower_orange, upper_orange)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        ball_pos = None
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if 100 < area < 5000:
+                (x, y), radius = cv2.minEnclosingCircle(cnt)
+                if area / (np.pi * radius**2) > 0.6:
+                    ball_pos = (int(x), int(y))
+                    break
+
+        # 3. Hand Analysis
+        hand_results = self.hands.process(image_rgb)
+        current_data = {"hands": [], "ball": ball_pos, "waist_y": round(waist_y, 3)}
+
         if hand_results.multi_hand_landmarks:
             for idx, hand_landmarks in enumerate(hand_results.multi_hand_landmarks):
-                # Identify if it's Left or Right hand
-                handedness = hand_results.multi_handedness[idx].classification[0].label
+                lbl = hand_results.multi_handedness[idx].classification[0].label
                 wrist = hand_landmarks.landmark[self.mp_hands.HandLandmark.WRIST]
-                
-                # Simple logic for dribble detection
-                # We look for a change in direction of the Y coordinate (vertical movement)
-                hand_idx = 0 if handedness == 'Left' else 1
+                h_idx = 0 if lbl == 'Left' else 1
                 curr_y = wrist.y
-                
-                if curr_y > self.last_y[hand_idx] + 0.02: # Moving Down
-                    if self.direction[hand_idx] != -1: # Was moving up or stationary
-                        self.direction[hand_idx] = -1
-                elif curr_y < self.last_y[hand_idx] - 0.02: # Moving Up
-                    if self.direction[hand_idx] == -1: # Was moving down
-                        self.dribble_count += 1
-                        self.direction[hand_idx] = 1
-                        
-                        # Crossover Check
-                        if self.last_hand and self.last_hand != handedness:
-                            self.moves.append("Crossover")
-                        self.last_hand = handedness
-                
-                self.last_y[hand_idx] = curr_y
-                
-                current_data["hands"].append({
-                    "label": handedness,
-                    "y": round(curr_y, 3),
-                    "x": round(wrist.x, 3)
-                })
 
-        return {
-            "dribble_count": self.dribble_count,
-            "moves": list(set(self.moves)),
-            "current_data": current_data
-        }
+                # Proximity to ball
+                dist = 999
+                if ball_pos:
+                    dist = np.sqrt((wrist.x*w - ball_pos[0])**2 + (wrist.y*h - ball_pos[1])**2)
+
+                # Dribble Logic
+                if curr_y > self.last_y[h_idx] + 0.01:
+                    self.direction[h_idx] = -1
+                elif curr_y < self.last_y[h_idx] - 0.01:
+                    # Count only if it was moving down AND is low enough (HomeCourt logic)
+                    if self.direction[h_idx] == -1 and curr_y > waist_y - 0.1:
+                        self.dribble_count += 1
+                        print(f"[DEBUG-DRIBBLE] Count: {self.dribble_count} | Hand: {lbl} | Y: {round(curr_y,2)}")
+                        self.direction[h_idx] = 1
+                        
+                        if self.last_hand and self.last_hand != lbl:
+                            if ball_pos and abs(ball_pos[0]/w - 0.5) < 0.2:
+                                self.moves.append("Crossover")
+                        self.last_hand = lbl
+                
+                self.last_y[h_idx] = curr_y
+                current_data["hands"].append({"label": lbl, "y": round(curr_y, 3), "dist_to_ball": round(dist, 1)})
+
+        return {"dribble_count": self.dribble_count, "moves": list(set(self.moves)), "current_data": current_data}
 
     def process_video(self, video_path):
         cap = cv2.VideoCapture(video_path)
-        frame_count = 0
-        
-        # Reset state for fresh video
         self.dribble_count = 0
         self.moves = []
-        self.last_hand = None
-        
         while cap.isOpened():
             ret, frame = cap.read()
-            if not ret:
-                break
-            
-            frame_count += 1
-            if frame_count % 2 == 0: # Process every 2nd frame for speed
-                self.process_frame(frame)
-        
+            if not ret: break
+            self.process_frame(frame)
         cap.release()
-        
-        return {
-            "success": True,
-            "dribble_count": self.dribble_count,
-            "moves": list(set(self.moves)),
-            "message": f"Analyse terminée. {self.dribble_count} dribbles détectés."
-        }
+        return {"success": True, "dribble_count": self.dribble_count, "moves": list(set(self.moves))}
 
 dribble_detector = DribbleDetector()

@@ -11,7 +11,6 @@ import { ThemedView } from '@/components/themed-view';
 import { useAppTheme } from '@/context/ThemeContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { challengeService } from '@/services/challengeService';
-import { Challenge } from '@/types/challenge';
 
 export default function ChallengesListScreen() {
   const router = useRouter();
@@ -19,7 +18,7 @@ export default function ChallengesListScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const { accentColor } = useAppTheme();
   
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [challenges, setChallenges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,8 +27,21 @@ export default function ChallengesListScreen() {
 
   const loadChallenges = async () => {
     try {
-      const data = await challengeService.getChallenges();
-      setChallenges(data);
+      setLoading(true);
+      const [firebaseData, aiData] = await Promise.all([
+        challengeService.getChallenges(),
+        challengeService.getAiChallenges()
+      ]);
+      
+      // Merge and tag AI challenges
+      const proChallenges = aiData.map((c: any) => ({
+        ...c,
+        isPro: true,
+        creatorName: "Ankece AI Hub",
+        pointsSuccess: c.reward_xp
+      }));
+
+      setChallenges([...proChallenges, ...firebaseData]);
     } catch (error) {
       console.error('Error loading challenges:', error);
     } finally {
@@ -37,20 +49,31 @@ export default function ChallengesListScreen() {
     }
   };
 
-  const renderChallenge = ({ item }: { item: Challenge }) => (
+  const renderChallenge = ({ item }: { item: any }) => (
     <TouchableOpacity 
-      style={[styles.challengeCard, { backgroundColor: colorScheme === 'dark' ? '#1C1C1E' : '#FFF' }]}
-      onPress={() => router.push(`/challenges/${item.id}`)}
+      style={[
+        styles.challengeCard, 
+        { backgroundColor: colorScheme === 'dark' ? '#1C1C1E' : '#FFF' },
+        item.isPro && { borderColor: accentColor, borderWidth: 1 }
+      ]}
+      onPress={() => item.isPro ? router.push(`/camera-analysis?mode=${item.type}&challenge=${item.id}`) : router.push(`/challenges/${item.id}`)}
     >
       <View style={styles.cardHeader}>
-        <View style={[styles.iconContainer, { backgroundColor: accentColor + '15' }]}>
-          <Ionicons name="trophy" size={24} color={accentColor} />
+        <View style={[styles.iconContainer, { backgroundColor: item.isPro ? accentColor : accentColor + '15' }]}>
+          <Ionicons name={item.isPro ? "sparkles" : "trophy"} size={24} color={item.isPro ? "#fff" : accentColor} />
         </View>
         <View style={styles.headerText}>
-          <ThemedText type="defaultSemiBold" style={styles.challengeTitle}>{item.title}</ThemedText>
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <ThemedText type="defaultSemiBold" style={styles.challengeTitle}>{item.title}</ThemedText>
+            {item.isPro && (
+                <View style={styles.proBadge}>
+                    <ThemedText style={styles.proBadgeText}>PRO</ThemedText>
+                </View>
+            )}
+          </View>
           <ThemedText style={styles.creatorName}>Par {item.creatorName}</ThemedText>
         </View>
-        <View style={[styles.pointsBadge, { backgroundColor: accentColor }]}>
+        <View style={[styles.pointsBadge, { backgroundColor: item.isPro ? '#34C759' : accentColor }]}>
           <ThemedText style={styles.pointsText}>+{item.pointsSuccess}</ThemedText>
         </View>
       </View>
@@ -59,8 +82,10 @@ export default function ChallengesListScreen() {
       
       <View style={styles.cardFooter}>
         <View style={styles.footerItem}>
-          <Ionicons name="people" size={16} color="#8E8E93" />
-          <ThemedText style={styles.footerText}>{item.participantsCount} participants</ThemedText>
+          <Ionicons name={item.isPro ? "flash" : "people"} size={16} color="#8E8E93" />
+          <ThemedText style={styles.footerText}>
+            {item.isPro ? "Challenge de Précision" : `${item.participantsCount} participants`}
+          </ThemedText>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#8E8E93" />
       </View>
@@ -195,6 +220,18 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     marginBottom: 16,
     lineHeight: 20,
+  },
+  proBadge: {
+    marginLeft: 8,
+    backgroundColor: '#FF9500',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  proBadgeText: {
+    color: '#000',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   cardFooter: {
     flexDirection: 'row',

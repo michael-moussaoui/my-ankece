@@ -292,6 +292,23 @@ export const getCoachStudents = async (coachId: string): Promise<any[]> => {
 };
 
 /**
+ * Update private notes for a student (coach action)
+ */
+export const updateStudentNotes = async (coachId: string, playerId: string, notes: string): Promise<void> => {
+    try {
+        const relationId = `${coachId}_${playerId}`;
+        const relationRef = doc(db, 'coach_students', relationId);
+        await updateDoc(relationRef, {
+            notes,
+            updatedAt: Timestamp.now()
+        });
+    } catch (error) {
+        console.error('Error updating student notes:', error);
+        throw error;
+    }
+};
+
+/**
  * Scan existing bookings to backfill the coach_students collection and studentCount
  */
 export const syncExistingStudents = async (): Promise<{ updatedCoaches: number, newRelations: number }> => {

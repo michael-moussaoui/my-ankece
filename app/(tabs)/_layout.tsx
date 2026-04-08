@@ -53,10 +53,10 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="basket-demo"
+        name="baller"
         options={{
           headerShown: false,
-          title: t('tabs.cv'),
+          title: t('tabs.baller'),
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="basketball.fill" color={color} />,
         }}
       />

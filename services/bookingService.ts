@@ -5,6 +5,7 @@ import {
     collection,
     deleteDoc,
     doc,
+    getDoc,
     getDocs,
     orderBy,
     query,
@@ -151,6 +152,23 @@ export const deleteSession = async (sessionId: string): Promise<void> => {
         await deleteDoc(sessionRef);
     } catch (error) {
         console.error('Error deleting session:', error);
+        throw error;
+    }
+};
+
+/**
+ * Get a single session by ID
+ */
+export const getSessionById = async (sessionId: string): Promise<BookingSession | null> => {
+    try {
+        const sessionRef = doc(db, BOOKINGS_COLLECTION, sessionId);
+        const snapshot = await getDoc(sessionRef);
+        if (snapshot.exists()) {
+            return { id: snapshot.id, ...snapshot.data() } as BookingSession;
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching session:', error);
         throw error;
     }
 };

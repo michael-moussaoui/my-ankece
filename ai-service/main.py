@@ -1,12 +1,14 @@
 import os
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import cv2
 import numpy as np
 import io
 import time
+import mimetypes
 from PIL import Image
 from cv_schemas import CVPlayerData
 from processors.cv_processor import process_video_cv, cancel_job
@@ -84,14 +86,129 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount output directory to serve static files (e.g., generated videos)
-os.makedirs("output", exist_ok=True)
-app.mount("/output", StaticFiles(directory="output"), name="output")
+def send_bytes_range_requests(file_path: str, start: int, end: int, chunk_size: int):
+    """Generator to read a chunk of bytes from a file."""
+    with open(file_path, "rb") as f:
+        f.seek(start)
+        while (pos := f.tell()) <= end:
+            read_size = min(chunk_size, end + 1 - pos)
+            yield f.read(read_size)
+
+@app.get("/output/{path:path}")
+@app.get("/assets/{path:path}")
+async def serve_video(path: str, request: Request):
+    """Custom route to handle HTTP Range requests for video streaming (iOS especially)."""
+    # Detect which folder we are serving from
+    base_dir = "assets" if request.url.path.startswith("/assets") else "output"
+    file_path = os.path.join(base_dir, path)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404)
+    
+    file_size = os.stat(file_path).st_size
+    range_header = request.headers.get("range")
+    
+    content_type, _ = mimetypes.guess_type(file_path)
+    content_type = content_type or "application/octet-stream"
+    
+    if range_header:
+        # Handle range-request (Partial Content 206)
+        try:
+            range_str = range_header.replace("bytes=", "")
+            start_str, end_str = range_str.split("-")
+            start = int(start_str)
+            end = int(end_str) if end_str else file_size - 1
+        except ValueError:
+            raise HTTPException(status_code=416, detail="Invalid range")
+            
+        if start >= file_size or end >= file_size:
+            raise HTTPException(status_code=416, detail="Range out of bounds")
+            
+        chunk_size = 1024 * 512 # 512KB chunks
+        return StreamingResponse(
+            send_bytes_range_requests(file_path, start, end, chunk_size),
+            status_code=206,
+            headers={
+                "Accept-Ranges": "bytes",
+                "Content-Range": f"bytes {start}-{end}/{file_size}",
+                "Content-Length": str(end - start + 1),
+                "Content-Type": content_type,
+            },
+        )
+    
+    # Standard 200 OK for non-range requests
+    return FileResponse(file_path, media_type=content_type, headers={"Accept-Ranges": "bytes"})
 
 @app.get("/")
 async def root():
     return {"message": "Ankece AI Service is running", "status": "online"}
 
+from processors.star_comparator import star_comparator
+from processors.gamification_engine import gamification_engine
+from routers.decision_iq import router as decision_iq_router
+
+# Mount Decision IQ router
+app.include_router(decision_iq_router)
+
+
+@app.get("/challenges")
+async def get_challenges():
+    """Returns available motion recognition challenges."""
+    try:
+        challenges = gamification_engine.get_active_challenges()
+        return {"challenges": challenges}
+    except Exception as e:
+        print(f"ERROR in /challenges: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {"success": False, "error": str(e), "challenges": []}
+
+@app.get("/transitions/{category}")
+async def get_transitions(category: str):
+    """Returns a list of transition video URLs for a given category."""
+    category_path = os.path.join(os.getcwd(), "assets", "transitions", category)
+    if not os.path.exists(category_path):
+        # Fallback to fire_mode if category not found (for demo purposes)
+        if category != "fire_mode":
+            category_path = os.path.join("assets", "transitions", "fire_mode")
+            category = "fire_mode"
+        
+    if not os.path.exists(category_path):
+        return {"videos": []}
+        
+    videos = [
+        f"/assets/transitions/{category}/{f}" 
+        for f in os.listdir(category_path) 
+        if f.endswith(('.mp4', '.mov', '.avi'))
+    ]
+    return {"videos": videos}
+
+@app.get("/challenges-v2")
+async def get_challenges_v2():
+    """Returns the list of currently available challenges."""
+    return {"success": True, "challenges": gamification_engine.get_active_challenges()}
+
+@app.post("/calculate-xp")
+async def calculate_xp(data: dict):
+    """
+    Calculates XP earned for a session and checks for challenge completion.
+    Expects 'session_data' (dict) and 'mode' (string).
+    """
+    session_data = data.get("session_data", {})
+    mode = data.get("mode", "shooting")
+    challenge_id = data.get("challenge_id")
+    
+    xp = gamification_engine.calculate_xp(session_data, mode)
+    challenge_completed = False
+    if challenge_id:
+        challenge_completed = gamification_engine.check_challenge_completion(session_data, challenge_id)
+        
+    return {
+        "success": True, 
+        "xp_earned": xp, 
+        "challenge_completed": challenge_completed,
+        "bonus_xp": 100 if challenge_completed else 0
+    }
 from processors.shot_detector import shot_detector
 from processors.dribble_detector import dribble_detector
 from processors.session_detector import session_detector

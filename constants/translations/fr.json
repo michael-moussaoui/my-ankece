@@ -2,7 +2,7 @@
     "tabs": {
         "home": "Accueil",
         "feed": "Flux",
-        "cv": "Basket CV",
+        "baller": "Baller",
         "analysis": "Analyse",
         "map": "Terrains",
         "coach": "Coach",
@@ -18,16 +18,13 @@
     },
     "home": {
         "title": "Ankece BasketBall",
-        "subtitle": "Votre compagnon ultime pour le basketball. Trouvez des terrains, progressez et créez votre CV de pro.",
+        "subtitle": "Votre compagnon ultime pour le basketball. Trouvez des terrains, progressez et connectez-vous avec la communauté.",
         "feature1_title": "Progressez vite",
         "feature1_desc": "Suivez vos entraînements et améliorez vos stats avec nos outils d'analyse.",
-        "feature2_title": "Soyez visible",
-        "feature2_desc": "Créez un CV interactif et partagez-le avec les clubs et recruteurs.",
         "feature3_title": "Trouvez un terrain",
         "feature3_desc": "Localisez les playgrounds et trouvez des partenaires pour jouer.",
         "feature4_title": "Progressez avec un Coach",
-        "feature4_desc": "Trouvez un coach certifié pour des séances personnalisées.",
-        "cta": "Générer mon CV Vidéo"
+        "feature4_desc": "Trouvez un coach certifié pour des séances personnalisées."
     },
     "map": {
         "title": "Playgrounds",
@@ -119,6 +116,61 @@
         "create_success": "Événement proposé avec succès !",
         "create_error": "Erreur lors de la création de l'événement."
     },
+    "baller": {
+        "title": "Baller Hub",
+        "subtitle": "Connecte-toi, joue et progresse avec la communauté.",
+        "tabs": {
+            "explore": "Explorer",
+            "feed": "Annonces",
+            "crews": "Crews",
+            "profile": "Profil"
+        },
+        "explore": {
+            "title": "Trouver des joueurs",
+            "quick_match": "Quick Match IA",
+            "quick_match_desc": "Trouve des partenaires basés sur ton niveau.",
+            "spotlight": "À la une cette semaine",
+            "search_filters": "Filtres de recherche",
+            "no_results": "Aucun joueur trouvé dans cette zone."
+        },
+        "feed": {
+            "title": "Fil d'annonces",
+            "create_ad": "Créer une annonce",
+            "filters": {
+                "all": "Tout",
+                "run": "Runs",
+                "scrimmage": "Scrimmages",
+                "training": "Entraînements",
+                "market": "Market"
+            },
+            "empty": "Aucune annonce disponible. Sois le premier !",
+            "interest": "Je suis intéressé",
+            "message": "Message"
+        },
+        "crews": {
+            "title": "Mes Crews",
+            "join_crew": "Rejoindre un Crew",
+            "create_crew": "Créer un Crew",
+            "members": "membres",
+            "level": "Niveau",
+            "empty": "Tu n'appartiens à aucun Crew pour le moment."
+        },
+        "profile": {
+            "public_view": "Voir mon profil public",
+            "edit_bio": "Modifier ma bio",
+            "stats_title": "Mes Statistiques",
+            "achievements": "Hauts Faits",
+            "export_cv": "Exporter mon Baller CV",
+            "verified": "Joueur Vérifié",
+            "follow": "Suivre",
+            "unfollow": "Ne plus suivre"
+        },
+        "actions": {
+            "message": "Message",
+            "invite": "Inviter",
+            "challenge": "Défier"
+        }
+    },
     "cv": {
         "subtitle": "Créez votre profil de joueur professionnel avec IA",
         "start": "Commencer mon CV",
@@ -151,6 +203,21 @@
         "current_season": "SAISON ACTUELLE",
         "ai_verified": "IA VÉRIFIÉ",
         "ai_scouting_report": "RAPPORT DE SCOUTING IA",
+        "offensive_video": "SÉQUENCE OFFENSIVE",
+        "defensive_video": "SÉQUENCE DÉFENSIVE",
+        "player_profile": "PROFIL JOUEUR",
+        "position": "POSTE",
+        "height": "TAILLE",
+        "age": "ÂGE",
+        "weight": "POIDS",
+        "strengths": "POINTS FORTS",
+        "years_old": "ans",
+        "current_club": "CLUB ACTUEL",
+        "stats_desc": "Statistiques en cours de saison",
+        "interceptions": "INT",
+        "cv_sections": "Sections du CV",
+        "share": "Partager",
+        "camera_permission_denied": "Accès caméra refusé. Veuillez autoriser l'accès dans les paramètres.",
         "processing_steps": [
             "Analyse de vos séquences...",
             "Extraction des statistiques...",
@@ -166,17 +233,45 @@
             "failed": "La génération a échoué"
         },
         "templates": {
-            "elite": {
-                "name": "Pack AI Elite",
-                "description": "Le futur du scouting. Intégration totale de vos analyses IA avec visuels high-tech et données vérifiées."
+            "classic_nba": {
+                "name": "Classic NBA",
+                "description": "Fond noir, textes dorés. Style épuré et intemporel. Pack Essentiel."
             },
-            "pro": {
-                "name": "Pack Elite Pro",
-                "description": "Le template ultime pour les pros : Photo plein pied, Highlights attaque/défense, Stats avancées et Parcours complet."
+            "street_ball": {
+                "name": "Street Ball",
+                "description": "Orange néon & vert électrique. L'énergie du playground. Pack Essentiel."
             },
-            "essential": {
-                "name": "Pack Essentiel",
-                "description": "Simple, rapide et efficace. Idéal pour un profil clair avec photo et vos meilleurs moments en 30 secondes."
+            "clean_pro": {
+                "name": "Clean Pro",
+                "description": "Blanc/noir, typographie moderne. Minimaliste et professionnel. Pack Essentiel."
+            },
+            "fire_mode": {
+                "name": "Fire Mode",
+                "description": "Rouge feu, énergie max. Un design qui dégage une intensité brûlante. Pack Elite."
+            },
+            "ice_cold": {
+                "name": "Ice Cold",
+                "description": "Bleu glacier, élégance froide. Calme, précision, efficacité. Pack Elite."
+            },
+            "galaxy": {
+                "name": "Galaxy",
+                "description": "Violet cosmique, particules étoiles. Un talent hors de ce monde. Pack Elite."
+            },
+            "champions_league": {
+                "name": "Champions League",
+                "description": "Or & noir. Trophées et prestige. Le niveau des champions. Pack Elite Pro."
+            },
+            "neon_city": {
+                "name": "Neon City",
+                "description": "Cyberpunk magenta/cyan. Ultra-moderne, futuriste et déchaîné. Pack Elite Pro."
+            },
+            "cinematic": {
+                "name": "Cinematic",
+                "description": "Noir profond, effet cinéma. Rouge Netflix, votre carrière est un film. Pack Elite Pro."
+            },
+            "custom_brand": {
+                "name": "Custom Brand",
+                "description": "Couleurs de votre club. Intégration totale à votre identité de team. Pack Elite Pro."
             }
         },
         "time_remaining": "Temps restant estimé : {{time}}s",
@@ -214,11 +309,50 @@
                 "SENIOR": "Sénior",
                 "ELITE": "Elite",
                 "PRO": "Pro"
+            },
+            "strengths": {
+                "Scoring": "Scoring",
+                "Three-Point Shooting": "Tir à 3pts",
+                "Defense": "Défense",
+                "Rebounding": "Rebond",
+                "Playmaking": "Playmaking",
+                "Athleticism": "Athlétisme",
+                "Basketball IQ": "QI Basket",
+                "Leadership": "Leadership"
             }
         },
         "form": {
             "previous": "Précédent",
             "next": "Suivant",
+            "export_success_title": "Export Réussi",
+            "export_success_msg": "Votre vidéo est prête. Voulez-vous la partager ?",
+            "contact_title": "CONTACT",
+            "phone": "Téléphone",
+            "dominant_hand": "Main dominante",
+            "category": "Catégorie",
+            "level": "Niveau",
+            "position": "POSTE",
+            "age": "ÂGE",
+            "height": "TAILLE",
+            "weight": "POIDS",
+            "years_old": "ans",
+            "current_club": "CLUB ACTUEL",
+            "current_season": "SAISON ACTUELLE",
+            "stats_desc": "Statistiques en cours de saison",
+            "pts": "PTS",
+            "reb": "REB",
+            "ast": "AST",
+            "interceptions": "INT",
+            "shot": "Tir",
+            "free_throws": "LF",
+            "strengths": "POINTS FORTS",
+            "offensive_video": "SÉQUENCE OFFENSIVE",
+            "defensive_video": "SÉQUENCE DÉFENSIVE",
+            "player_profile": "PROFIL JOUEUR",
+            "cv_sections": "Sections du CV",
+            "share": "Partager",
+            "no": "Non",
+            "camera_permission_denied": "Accès caméra refusé. Veuillez autoriser dans les paramètres.",
             "stepper": {
                 "step1": "Identité",
                 "step2": "Profil Sportif",
@@ -368,6 +502,11 @@
                     "NAT": "National",
                     "FED": "Fédéral Pro B-NM1-NM2",
                     "INT": "International"
+                },
+                "lateralization": {
+                    "Gaucher": "Gaucher",
+                    "Droitier": "Droitier",
+                    "Ambidextre": "Ambidextre"
                 }
             },
             "packs": {
@@ -377,6 +516,16 @@
                 "upgrade_needed": "Veuillez améliorer votre pack pour ajouter plus de vidéos.",
                 "locked": "Verrouillé",
                 "choose_template": "Choisir ce template"
+            },
+            "contact": {
+                "preview": "Prévisualisation",
+                "export_video": "Exporter la Vidéo CV",
+                "export_error": "L'exportation a échoué.",
+                "replay": "Revoir",
+                "export_success_title": "Export Réussi",
+                "export_success_msg": "Votre vidéo est prête. Voulez-vous la partager ?",
+                "no": "Non",
+                "share": "Partager"
             }
         }
     },
@@ -386,6 +535,36 @@
         "view_map": "Carte",
         "no_results": "Aucun coach trouvé",
         "create_profile": "Créer un profil Coach",
+        "menu": {
+            "title": "Admin Coach",
+            "dashboard": "Tableau de Bord Coach",
+            "profile": "Mon Profil Coach",
+            "become": "Devenir Coach"
+        },
+        "dashboard": {
+            "greeting": "Bonjour, {{name}} 👋",
+            "monthlyRevenue": "Revenus du mois",
+            "upcomingSessions": "Prochaines séances",
+            "activePlayers": "Joueurs les plus actifs",
+            "seeAll": "Voir tous",
+            "programs": "Mes Programmes",
+            "programsSubtitle": "Créez et vendez vos plans d'entraînement"
+        },
+        "revenue": {
+            "title": "Revenus & Facturation",
+            "total": "Recettes totales",
+            "breakdown": "Répartition des revenus",
+            "recentPayments": "Paiements récents",
+            "createPaymentLink": "Créer un lien de paiement",
+            "exportPdf": "Exporter l'historique en PDF",
+            "exportDev": "L'exportation PDF sera disponible prochainement dans la version pro.",
+            "status": {
+                "paid": "Payé",
+                "pending": "En attente",
+                "refunded": "Remboursé",
+                "cancelled": "Annulé"
+            }
+        },
         "admin": {
             "title": "Validation des Coachs",
             "management_title": "Gestion des Coachs",
@@ -418,8 +597,9 @@
             }
         },
         "agenda": {
-            "title": "Mon Agenda",
+            "title": "Mon Planning",
             "add_session": "Ajouter un créneau",
+            "slots": "créneau(x)",
             "select_day": "Sélectionnez un jour",
             "no_sessions": "Aucun créneau pour ce jour",
             "session_type": "Type de séance",
@@ -427,17 +607,25 @@
             "group": "Collectif",
             "startTime": "Heure de début",
             "endTime": "Heure de fin",
-            "price": "Prix",
-            "location": "Lieu",
+            "price_free": "Séance gratuite",
+            "price": "Tarif (€)",
+            "location": "Lieu de la séance",
+            "location_placeholder": "ex: Gymnase municipal",
             "save_session": "Enregistrer le créneau",
             "delete_session": "Supprimer le créneau",
-            "confirm_delete": "Supprimer ce créneau ?",
+            "confirm_delete": "Voulez-vous supprimer ce créneau ?",
+            "booked_by": "Réservé par",
             "reserve": "Réserver",
             "confirm_reserve": "Confirmer la réservation ?",
             "my_bookings": "Mes réservations",
-            "booked_by": "Réservé par",
-            "price_free": "Séance gratuite",
-            "location_placeholder": "Ex: Terrain municipal, 15ème...",
+            "types": {
+                "shooting": "Tir & Shoot",
+                "physical": "Prépa Physique",
+                "technical": "Technique / Dribble",
+                "mental": "Mental & Stratégie",
+                "live": "Session Live Video",
+                "other": "Autre"
+            },
             "status": {
                 "available": "Disponible",
                 "reserved": "Réservé",
@@ -488,14 +676,60 @@
             "update_success": "Profil mis à jour et renvoyé pour validation",
             "error": "Erreur lors de la création du profil."
         },
-        "filters": {
-            "title": "Filtres",
-            "reset": "Réinitialiser",
-            "specialties": "Spécialités",
-            "levels": "Niveaux",
-            "budget": "Budget (Taux horaire)",
-            "max_price": "Max {{price}}€",
-            "apply": "Appliquer les filtres"
+        "students": {
+            "title": "Mes Élèves",
+            "search_placeholder": "Filtrer par nom...",
+            "last_booking": "Dernière séance",
+            "sessions": "séance(s)",
+            "empty": "Vous n'avez pas encore d'élèves.",
+            "add_student": "Ajouter un élève",
+            "invite_code": "Votre code invitation",
+            "invite_description": "Partagez ce code avec vos élèves pour qu'ils puissent vous trouver et réserver facilement.",
+            "details": {
+                "progression": "Progression",
+                "history": "Historique",
+                "notes": "Notes Coach",
+                "notes_placeholder": "Ajoutez vos observations sur cet élève (privé)...",
+                "save_notes": "Enregistrer les notes",
+                "stats": {
+                    "shooting": "Taux de réussite Tir",
+                    "physical": "Points par séance",
+                    "attendance": "Assiduité"
+                }
+            }
+        },
+        "programs": {
+            "title": "Mes Programmes",
+            "create": "Créer un programme",
+            "edit_title": "Modifier Programme",
+            "not_found": "Programme non trouvé",
+            "edit": "Modifier le Programme",
+            "form": {
+                "basic_info": "Informations de base",
+                "title_label": "Titre du programme",
+                "title_placeholder": "Ex: Tir d'Élite - 4 Semaines",
+                "desc_label": "Description",
+                "desc_placeholder": "Expliquez les objectifs de ce programme...",
+                "price_label": "Prix de vente (€)",
+                "duration_label": "Durée (semaines)",
+                "level_label": "Niveau requis"
+            },
+            "builder": {
+                "add_session": "Ajouter une Séance",
+                "session_title": "Titre de la séance",
+                "session_placeholder": "Ex: Échauffement & Routine de tir",
+                "add_drill": "Ajouter un Exercice",
+                "reorder": "Réorganiser",
+                "drill": {
+                    "name": "Nom de l'exercice",
+                    "sets": "Séries",
+                    "reps": "Reps",
+                    "duration": "Durée",
+                    "intensity": "Intensité"
+                }
+            },
+            "empty": "Vous n'avez pas encore créé de programme.",
+            "save_success": "Programme enregistré avec succès !"
         },
         "profile": {
             "book": "Réserver",
@@ -558,19 +792,17 @@
             "intermediate": "Intermédiaire",
             "advanced": "Avancé",
             "elite": "Elite / Pro"
-        },
-        "students": {
-            "title": "Mes Élèves",
-            "empty": "Vous n'avez pas encore d'élèves.",
-            "last_booking": "Dernière séance",
-            "sessions": "séance(s)"
         }
     },
     "common": {
         "loading": "Chargement...",
         "error": "Erreur",
+        "info": "Information",
         "success": "Succès",
         "cancel": "Annuler",
+        "all": "Tout",
+        "save": "Enregistrer",
+        "back": "Retour",
         "camera": "Caméra",
         "gallery": "Galerie",
         "choose_option": "Choisir une option",
@@ -583,7 +815,6 @@
         "thanks": "Merci",
         "report_success": "Signalement envoyé.",
         "report_error": "Erreur lors du signalement.",
-        "back": "Retour",
         "confirm": "Confirmer",
         "sending": "Envoi...",
         "sync": "Synchroniser",
@@ -609,6 +840,17 @@
         "cgv_content": "# Conditions Générales de Vente (CGV)\n\n## 1. Produits et Services\nAnkece propose des abonnements Elite Pro permettant d'accéder à des fonctionnalités avancées.\n\n## 2. Paiement\nLes paiements sont sécurisés et traités via la plateforme Stripe.",
         "privacy_content": "# Politique de Confidentialité (RGPD) - Ankece\n\n**Dernière mise à jour : 26 Février 2026**\n\nLa protection de votre vie privée est une priorité pour **Ankece**. Cette Politique de Confidentialité détaille comment nous collectons, utilisons et protégeons vos données personnelles conformément au Règlement Général sur la Protection des Données (RGPD).\n\n## 1. Responsable du Traitement\nLe responsable du traitement des données est **Michael MOUSSAOUI**, joignable à l'adresse email : **team.ankece@gmail.com**.\n\n## 2. Données Collectées\nNous collectons les données suivantes :\n*   **Identité** : Nom, prénom, photo de profil.\n*   **Contact** : Adresse email.\n*   **Localisation** : Position géographique (pour la carte des playgrounds et la mise en relation locale).\n*   **Données Sportives** : Statistiques de tir, performances, analyses de trajectoire (via l'IA).\n*   **Médias** : Photos et vidéos de tirs téléchargées par l'utilisateur pour analyse ou publication sur le flux.\n\n## 3. Finalités du Traitement\nVos données sont traitées pour les raisons suivantes :\n*   Assurer le fonctionnement du service de mise en relation.\n*   Calculer et afficher vos statistiques de progression via le Tracker.\n*   Fournir l'analyse vidéo par IA (Shoot Analyse).\n*   Afficher votre profil aux autres utilisateurs (Coachs/Joueurs).\n*   Envoyer des notifications relatives à vos activités.\n\n## 4. Partage des Données\nVos données peuvent être partagées avec :\n*   **Les autres utilisateurs** : Certaines informations de profil et de performance sont visibles par la communauté Ankece.\n*   **Les prestataires techniques** : Google/Firebase pour le stockage et l'hébergement, Cloudinary pour les médias.\n*   **Service IA** : Vos vidéos de tirs sont traitées de manière sécurisée par notre moteur d'analyse afin de générer les statistiques.\n\n## 5. Durée de Conservation\nLes données sont conservées tant que votre compte est actif. En cas de suppression de compte, vos données sont définitivement supprimées de nos bases de production sous un délai de 30 jours, sous réserve d'éventuelles obligations légales de conservation.\n\n## 6. Sécurité\nNous mettons en œuvre des mesures de sécurité techniques et organisationnelles pour protéger vos données contre tout accès non autorisé, perte ou altération.\n\n## 7. Vos Droits\nConformément au RGPD, vous disposez des droits suivants :\n*   **Droit d'accès** : Obtenir copie de vos données.\n*   **Droit de rectification** : Corriger des données inexactes.\n*   **Droit à l'effacement** : Demander la suppression de votre compte et des données associées.\n*   **Droit d'opposition** : S'opposer au traitement pour des motifs légitimes.\n\nPour exercer ces droits, contactez-nous à : **team.ankece@gmail.com**.\n\n## 8. Cookies et Tracking\nL'application peut utiliser des identifiants techniques pour le maintien de la session et l'analyse anonyme de l'utilisation. Vous pouvez gérer les permissions de localisation directement dans les réglages de votre smartphone."
     },
+    "tracker": {
+        "training": "Entraînements",
+        "shooting_session": "Shooting Session",
+        "shooting_desc": "Enregistrez vos tirs",
+        "dribble_workout": "Dribble Workout",
+        "dribble_desc": "Maîtrisez le ballon",
+        "dribble_touch": "Dribble & Touch",
+        "dribble_touch_desc": "Jeu interactif (IA)",
+        "shoot_analysis": "Shoot Analyse",
+        "shoot_analysis_desc": "Analyse IA de tir"
+    },
     "analysis": {
         "made": "Réussi",
         "missed": "Manqué",
@@ -627,5 +869,131 @@
         "step_apex": "1. Placez la vidéo au sommet de la courbe\n2. Touchez le ballon (Sommet)",
         "step_hoop": "1. Placez la vidéo à l'arrivée\n2. Touchez le panier",
         "step_review": "Analyse terminée !"
+    },
+    "analytics": {
+        "title": "Ma Progression",
+        "dashboard": "Tableau de Performance",
+        "report": {
+            "title": "Rapport de Séance",
+            "success": "Rapport enregistré !",
+            "rating": "Note globale",
+            "intensity": "Intensité ressentie (1-10)",
+            "strengths": "Points forts",
+            "improvements": "Axes d'amélioration",
+            "comment": "Commentaire du Coach",
+            "submit": "Publier le rapport",
+            "player_notes": "Mon Carnet de Joueur",
+            "player_notes_placeholder": "Tes ressentis, tes difficultés...",
+            "player_question": "Comment s'est passée ta séance ?",
+            "save_log": "Enregistrer mon carnet",
+            "added_notes": "Mon ressenti ajouté",
+            "add_notes": "Ajouter mon ressenti",
+            "coach_log": "Rapport de séance Coach",
+            "history": "Historique des rapports",
+            "skills": {
+                "shooting": "Précision au Tir",
+                "defense": "Défense",
+                "ball_handling": "Dribble / Handling",
+                "footwork": "Appuis / Footwork",
+                "conditioning": "Condition Physique",
+                "tactical": "QI Tactique",
+                "rebounding": "Rebond",
+                "leadership": "Leadership"
+            }
+        },
+        "monthly": {
+            "title": "Récap Mensuel IA",
+            "summary": "Analyse de l'IA Ankece",
+            "roadmap": "Ma Feuille de route",
+            "integrations": "Intégrations",
+            "ai_optimized": "Optimisé par Ankece IA",
+            "points_per_match": "Points/Match",
+            "three_pt_rate": "Réussite 3PT",
+            "drills_suggested": "Drills suggérés par le Coach",
+            "pro_intensity": "Intensité Pro"
+        },
+        "integrations": {
+            "title": "Sources de Données",
+            "subtitle": "Connectez vos applications tiers pour centraliser vos statistiques de progression.",
+            "security_info": "Vos données sont cryptées et partagées uniquement avec votre coach pour optimiser vos entraînements.",
+            "homecourt_desc": "Importe tes sessions de tir et heatmaps.",
+            "hudl_desc": "Stats de match et analyses vidéo.",
+            "apple_desc": "Récupération, sommeil et calories.",
+            "catapult_desc": "Charge d'entraînement physique Pro."
+        }
+    },
+    "academy": {
+        "title": "Street Academy",
+        "lab": "The Concrete Lab",
+        "store": "Invasion Store",
+        "myContent": "Mes Programmes",
+        "createDrill": "Nouveau Drill",
+        "createProgram": "Création de l'Invasion",
+        "drills": "Drills",
+        "programs": "Programmes",
+        "weeks": "Semaines",
+        "weeks_one": "{{count}} Semaine",
+        "weeks_other": "{{count}} Semaines",
+        "drillsCount_one": "{{count}} Drill",
+        "drillsCount_other": "{{count}} Drills",
+        "synopsis": "SYNOPSIS",
+        "curriculum": "CURRICULUM",
+        "instructions": "INSTRUCTIONS",
+        "tagsLabel": "TAGS",
+        "certified": "CONTENU CERTIFIÉ PAR ANKECE ACADEMY",
+        "noInstructions": "Aucune consigne fournie.",
+        "noContent": "Rien ici pour le moment.",
+        "saveDrill": "ENREGISTRER LE DRILL",
+        "publishProgram": "PUBLIER L'INVASION",
+        "unlockAccess": "DÉBLOQUER L'ACCÈS",
+        "selectDrills": "SÉLECTIONNER LES DRILLS ({{count}} sélectionnés)",
+        "form": {
+            "title": "TITRE",
+            "description": "DESCRIPTION",
+            "videoUrl": "URL VIDÉO",
+            "duration": "DURÉE",
+            "difficulty": "DIFFICULTÉ",
+            "tags": "TAGS (séparés par des virgules)",
+            "price": "PRIX (€)",
+            "weeksCount": "SEMAINES",
+            "thumbnailUrl": "URL MINIATURE",
+            "placeholders": {
+                "drillTitle": "ex: Stephen Curry Shooting Drill",
+                "drillDesc": "Comment réaliser cet exercice...",
+                "videoUrl": "Lien MP4 direct ou Cloudinary",
+                "tags": "Shooting, Handles, Warmup",
+                "programTitle": "ex: Programme Vertigo Jump",
+                "programDesc": "Quels objectifs seront atteints...?",
+                "price": "0.00",
+                "weeks": "Nombre",
+                "thumbnail": "Lien URL image"
+            }
+        },
+        "alerts": {
+            "fillRequired": "Veuillez remplir le titre et l'URL vidéo.",
+            "fillProgram": "Veuillez remplir le titre et sélectionner au moins un drill.",
+            "saveSuccess": "Contenu créé avec succès !",
+            "saveError": "Impossible de créer le contenu.",
+            "noDrills": "Aucun drill trouvé. Créez des drills d'abord.",
+            "uploadSuccess": "Média mis en ligne avec succès !",
+            "uploadError": "Erreur lors de la mise en ligne.",
+            "permissionDenied": "L'accès à la galerie est requis."
+        },
+        "categories": {
+            "shooting": "Shoot Studio",
+            "handles": "Handles & Flow",
+            "physical": "Groot Force",
+            "tactical": "Underground IQ"
+        },
+        "difficulty": {
+            "beginner": "Rookie",
+            "intermediate": "Pro",
+            "advanced": "Legend"
+        },
+        "buyNow": "Débloquer",
+        "owned": "Débloqué",
+        "free": "GRATUIT",
+        "liveInvasion": "Court Invasion Live",
+        "analysisStudio": "Underground Studio"
     }
 }

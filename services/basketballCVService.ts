@@ -1,13 +1,26 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { BasketballPlayerData } from '../types/basketball/template';
 import { cloudinaryService } from './cloudinaryService';
 
 const getBaseUrl = () => {
-    const debuggerHost = Constants.expoConfig?.hostUri?.split(':')[0];
-    if (debuggerHost) {
-        return `http://${debuggerHost}:8000`;
+    const hostUri = Constants.expoConfig?.hostUri;
+    
+    // Si on est sur un simulateur Android, 10.0.2.2 est l'hôte
+    if (Platform.OS === 'android' && !hostUri?.includes('192.168.')) {
+        return 'http://10.0.2.2:8000';
     }
-    return 'http://10.0.2.2:8000'; // Default for Android Emulator
+
+    // Sinon, on essaie de récupérer l'IP de la machine de dev via Expo
+    if (hostUri) {
+        const debuggerHost = hostUri.split(':')[0];
+        if (debuggerHost) {
+            return `http://${debuggerHost}:8000`;
+        }
+    }
+
+    // Fallback par défaut (iOS Simulator ou cas où hostUri est absent)
+    return 'http://localhost:8000';
 };
 
 const API_BASE_URL = getBaseUrl();
@@ -31,22 +44,28 @@ export const basketballCVService = {
         try {
             console.log("📤 Uploading media to Cloudinary...");
 
-            // Upload separate files
-            const profilePhotoUrl = playerData.profilePhoto?.uri ? await cloudinaryService.uploadImage(playerData.profilePhoto.uri) : null;
-            const clubLogoUrl = playerData.currentClub.clubLogo?.uri ? await cloudinaryService.uploadImage(playerData.currentClub.clubLogo.uri) : null;
-            const presentationVideoUrl = playerData.presentationVideo?.uri ? await cloudinaryService.uploadVideo(playerData.presentationVideo.uri) : null;
+            // Upload separate files - Only if they are local URIs
+            const uploadIfNeeded = async (uri: string | null | undefined, type: 'image' | 'video') => {
+                if (!uri) return null;
+                if (uri.startsWith('http')) return uri; // Already uploaded
+                return type === 'image' ? await cloudinaryService.uploadImage(uri) : await cloudinaryService.uploadVideo(uri);
+            };
+
+            const profilePhotoUrl = await uploadIfNeeded(playerData.profilePhoto?.uri, 'image');
+            const clubLogoUrl = await uploadIfNeeded(playerData.currentClub.clubLogo?.uri, 'image');
+            const presentationVideoUrl = await uploadIfNeeded(playerData.presentationVideo?.uri, 'video');
 
             // Upload offensive videos in parallel
             const offensiveVideoUrls = await Promise.all(
                 (playerData.offensiveVideos || []).map(async (v) =>
-                    v.uri ? await cloudinaryService.uploadVideo(v.uri) : null
+                    uploadIfNeeded(v.uri, 'video')
                 )
             ).then(results => results.filter((url): url is string => !!url));
 
             // Upload defensive videos in parallel
             const defensiveVideoUrls = await Promise.all(
                 (playerData.defensiveVideos || []).map(async (v) =>
-                    v.uri ? await cloudinaryService.uploadVideo(v.uri) : null
+                    uploadIfNeeded(v.uri, 'video')
                 )
             ).then(results => results.filter((url): url is string => !!url));
 
@@ -87,6 +106,7 @@ export const basketballCVService = {
                 transitionType: playerData.transitionType || 'fade',
                 jobId: playerData.jobId || `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 tier: playerData.tier,
+                templateId: playerData.templateId,
                 language: playerData.language || 'fr',
                 // Now using Cloudinary URLs
                 profilePhotoUrl,
@@ -103,11 +123,13 @@ export const basketballCVService = {
                 body: JSON.stringify(payload),
             });
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status}`);
+            const responseText = await response.text();
+            try {
+                return JSON.parse(responseText);
+            } catch (e) {
+                console.error('❌ Failed to parse JSON response:', responseText);
+                throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
             }
-
-            return await response.json();
         } catch (error) {
             console.error('❌ Error triggering CV generation:', error);
             return {
@@ -123,10 +145,13 @@ export const basketballCVService = {
     getJobStatus: async (jobId: string): Promise<any> => {
         try {
             const response = await fetch(`${API_BASE_URL}/job-status/${jobId}`);
-            if (!response.ok) {
-                throw new Error(`Status API Error: ${response.status}`);
+            const responseText = await response.text();
+            try {
+                return JSON.parse(responseText);
+            } catch (e) {
+                console.error('❌ Failed to parse status JSON:', responseText);
+                throw new Error(`Invalid Status JSON from ${API_BASE_URL}: ${responseText.substring(0, 100)}...`);
             }
-            return await response.json();
         } catch (error) {
             console.error('❌ Error checking job status:', error);
             return {

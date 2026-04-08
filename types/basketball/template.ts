@@ -66,6 +66,7 @@ export interface BasketballPlayerData {
     accentColor?: string;
     transitionType?: 'fade' | 'zoom' | 'none';
     jobId?: string;
+    templateId?: string;
 }
 
 export type BasketballPosition =
@@ -104,9 +105,12 @@ export interface PlayerStats {
     minutesPerGame?: number;
 }
 
+export type TransitionEffect = 'fade' | 'slide' | 'zoom' | 'glitch' | 'flash' | 'blur' | 'paper-tear';
+export type OverlayEffect = 'none' | 'grain' | 'particles' | 'scanner' | 'vignette' | 'lightleak' | 'flames';
+
 export interface BasketballTemplateSection {
     id: string;
-    type: 'intro' | 'profile' | 'stats' | 'offensive' | 'defensive' | 'history' | 'contact';
+    type: 'intro' | 'profile' | 'stats' | 'offensive' | 'defensive' | 'history' | 'contact' | 'achievements' | 'palmares';
     title: string;
     duration: number; // en ms
     backgroundColor?: string;
@@ -115,6 +119,10 @@ export interface BasketballTemplateSection {
         angle: number;
     };
     layout: SectionLayout;
+    transitionEffect?: TransitionEffect;
+    overlayEffect?: OverlayEffect;
+    backgroundImage?: any;
+    backgroundVideo?: any;
 }
 
 export interface SectionLayout {
@@ -142,7 +150,8 @@ export interface BasketballTemplate {
     id: string;
     name: string;
     description: string;
-    thumbnail: string;
+    thumbnail: any;
+    videoPreview?: string;
     isPremium: boolean;
     tier?: CVTier;
 

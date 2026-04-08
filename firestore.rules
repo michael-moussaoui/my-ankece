@@ -1,11 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+    // RÈGLES POUR LES RAPPORTS DE SÉANCE ET MÉTRIQUES (SECURE)
+    match /session_reports/{reportId} {
+      allow read: if request.auth != null && (resource.data.playerId == request.auth.uid || resource.data.coachId == request.auth.uid);
+      allow write: if request.auth != null;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // DECISION IQ TRAINER
+    // ══════════════════════════════════════════════════════════════
+
+    // Sessions Decision IQ - chaque user ne voit que les siennes
+    // Note: la query filtre par userId côté client, la règle valide côté serveur
+    match /decision_sessions/{sessionId} {
+      // read sur un document unique : vérifie userId
+      allow get: if request.auth != null && resource.data.userId == request.auth.uid;
+      // read sur une liste (query) : autorisé si authentifié (le filtre userId est dans la query)
+      allow list: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false; // Sessions immuables après création
+    }
+
+    // Situations globales (cache partagé) - lecture seule pour les users
+    match /situations/{situationId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+
+    match /player_metrics/{metricId} {
+      allow read: if request.auth != null && resource.data.playerId == request.auth.uid;
+      allow write: if request.auth != null;
+    }
+
     // Règle pour vos utilisateurs : tout utilisateur authentifié peut LIRE les profils, mais seul l'auteur peut ÉCRIRE
     match /users/{userId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
+
+      // ── Sous-collection Decision IQ Stats (doit être IMBRIQUÉE ici) ──
+      // Firestore n'applique PAS les règles parent aux sous-collections
+      match /iq_stats/{statDoc} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     // RÈGLE pour le fil d'actualité
@@ -196,6 +235,12 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
+    match /ai_sessions/{sessionId} {
+      allow read: if true; 
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
     match /user_stats/{userId} {
       allow read: if true; 
       allow write: if request.auth != null && request.auth.uid == userId;
@@ -205,6 +250,19 @@ service cloud.firestore {
     match /coach_students/{relationId} {
       // Un utilisateur connecté peut lire et écrire les relations coach-élève
       allow read, write: if request.auth != null;
+    }
+
+    // RÈGLES POUR LES PROGRAMMES DE COACHING
+    match /coaching_programs/{programId} {
+      // Tout le monde peut lire les programmes (pour naviguer/acheter)
+      allow read: if true;
+      // Seuls les coachs peuvent créer leurs programmes
+      allow create: if request.auth != null;
+      // Seul le propriétaire ou l'admin peut modifier/supprimer
+      allow update, delete: if request.auth != null && (
+        get(/databases/$(database)/documents/coaches/$(resource.data.coachId)).data.userId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
     }
 
     // RÈGLES POUR LES CHALLENGES
@@ -278,5 +336,64 @@ service cloud.firestore {
                           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants);
       }
     }
+
+    // RÈGLES POUR LA STREET ACADEMY (INVASION STORE)
+    match /drills_library/{drillId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null && (
+        request.resource.data.coachId == request.auth.uid ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    match /training_programs/{programId} {
+      allow read: if request.auth != null && (resource.data.status == 'published' || resource.data.coachId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      allow create, update, delete: if request.auth != null && (
+        (request.method == 'create' ? (request.resource.data.coachId == request.auth.uid || request.resource.data.coachId == 'ankece_official') : resource.data.coachId == request.auth.uid) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    match /content_purchases/{purchaseId} {
+      allow read, create: if request.auth != null && (request.resource.data.userId == request.auth.uid || resource.data.userId == request.auth.uid);
+    }
+
+    match /academy_progress/{progressId} {
+      allow read: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow write: if request.auth != null && (request.resource.data.userId == request.auth.uid || (resource != null && resource.data.userId == request.auth.uid));
+    }
+    
+    // RÈGLES POUR LES PROFILS BALLER
+    match /ballerProfiles/{profileId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == profileId;
+    }
+
+    // RÈGLES POUR LES ANNONCES (ADS)
+    match /ballerAds/{adId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        resource.data.authorId == request.auth.uid || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['interestedIds', 'interestedCount'])
+      );
+      allow delete: if request.auth != null && (resource.data.authorId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+
+    // RÈGLES POUR LES CREWS (BALLER HUB)
+    match /crews/{crewId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      // L'admin peut tout modifier. Un utilisateur peut s'ajouter à pendingRequests ou memberIds uniquement pour lui-même.
+      allow update: if request.auth != null && (
+        resource.data.adminId == request.auth.uid ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pendingRequests']) ||
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds']))
+      );
+      allow delete: if request.auth != null && resource.data.adminId == request.auth.uid;
+    }
+
+    // RÈGLES POUR LES RAPPORTS DE SÉANCE ET MÉTRIQUES
   }
 }

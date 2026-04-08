@@ -14,6 +14,7 @@ import {
     updateDoc,
     where
 } from 'firebase/firestore';
+import { Platform } from 'react-native';
 
 const CHALLENGES_COLLECTION = 'challenges';
 const PARTICIPATIONS_COLLECTION = 'challenge_participations';
@@ -111,5 +112,63 @@ export const challengeService = {
         );
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChallengeParticipation));
+    },
+
+    // AI-Driven Challenges (Bridge to AI Service)
+    async getAiChallenges() {
+        try {
+            const response = await fetch(`${AI_SERVICE_URL}/challenges`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) {
+                const text = await response.text();
+                console.error(`AI Service Error (${response.status}):`, text.slice(0, 500));
+                return [];
+            }
+            const data = await response.json();
+            return data.challenges || [];
+        } catch (error) {
+            console.error('Error fetching AI challenges:', error);
+            return [];
+        }
+    },
+
+    async calculateSessionXp(sessionData: any, mode: 'shooting' | 'dribble', challengeId?: string) {
+        try {
+            const response = await fetch(`${AI_SERVICE_URL}/calculate-xp`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json' 
+                },
+                body: JSON.stringify({ session_data: sessionData, mode, challenge_id: challengeId }),
+            });
+            if (!response.ok) {
+                const text = await response.text();
+                console.error(`AI XP Calculation Error (${response.status}):`, text.slice(0, 500));
+                return { xp_earned: 0, challenge_completed: false };
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error calculating XP:', error);
+            return { xp_earned: 0, challenge_completed: false };
+        }
     }
 };
+
+const getBaseUrl = () => {
+    let host = 'localhost';
+    try {
+        const Constants = require('expo-constants').default;
+        const hostUri = Constants.expoConfig?.hostUri;
+        if (hostUri) {
+            host = hostUri.split(':')[0];
+        } else if (Platform.OS === 'android') {
+            host = '10.0.2.2';
+        }
+    } catch (e) {
+        console.warn('Could not detect host, falling back to localhost');
+    }
+    return `http://${host}:8000`;
+};
+const AI_SERVICE_URL = getBaseUrl();

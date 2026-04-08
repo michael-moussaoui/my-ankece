@@ -10,9 +10,11 @@ import { ActivityIndicator, Dimensions, StyleSheet, TouchableOpacity, View } fro
 
 import { AIPoseOverlay } from '@/components/editor/AIPoseOverlay';
 import { ThemedText } from '@/components/themed-text';
+import { RadarChart } from '@/components/tracker/RadarChart';
 import { PRO_MOVES } from '@/constants/pro-moves';
+import { useAppTheme } from '@/context/ThemeContext';
 import { poseService } from '@/services/ai/poseService';
-
+import { starComparisonService } from '@/services/ai/starComparisonService';
 // Tensor Camera
 // @ts-ignore
 const TensorCamera = cameraWithTensors(CameraView);
@@ -29,6 +31,11 @@ export default function ProMimicScreen() {
     const [poses, setPoses] = useState<any[]>([]);
     const [facing, setFacing] = useState<'front' | 'back'>('front');
     const [mirror, setMirror] = useState(false);
+    const { accentColor } = useAppTheme();
+
+    // Comparison State
+    const [comparisonResult, setComparisonResult] = useState<any>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // Video Player
     const player = useVideoPlayer(proMove?.videoUrl || '', player => {
@@ -151,6 +158,75 @@ export default function ProMimicScreen() {
                         <ThemedText style={styles.controlText}>Flip</ThemedText>
                     </TouchableOpacity>
                 </View>
+
+                {/* Capture & Compare Button */}
+                <View style={styles.captureContainer}>
+                    <TouchableOpacity 
+                        style={[styles.captureButton, { backgroundColor: accentColor }]} 
+                        onPress={async () => {
+                            if (poses.length === 0) return;
+                            setIsAnalyzing(true);
+                            
+                            // Extract metrics from current pose
+                            const kp = poses[0].keypoints;
+                            const calculateAngle = (A: any, B: any, C: any) => {
+                                const AB = Math.sqrt(Math.pow(B.x - A.x, 2) + Math.pow(B.y - A.y, 2));
+                                const BC = Math.sqrt(Math.pow(B.x - C.x, 2) + Math.pow(B.y - C.y, 2));
+                                const AC = Math.sqrt(Math.pow(C.x - A.x, 2) + Math.pow(C.y - A.y, 2));
+                                return Math.round(Math.acos((AB * AB + BC * BC - AC * AC) / (2 * AB * BC)) * (180 / Math.PI));
+                            };
+
+                            const metrics = {
+                                release_angle: calculateAngle(kp[12], kp[14], kp[16]), // Shoulder-Elbow-Wrist (as proxy)
+                                knee_bend_angle: calculateAngle(kp[24], kp[26], kp[28]),
+                                follow_through_score: 85 // Mocked for single frame
+                            };
+
+                            try {
+                                const result = await starComparisonService.compareShot(metrics, proMove.player.toLowerCase().includes('curry') ? 'steph_curry' : 'klay_thompson');
+                                setComparisonResult(result.comparison);
+                            } catch (e) {
+                                console.error(e);
+                            } finally {
+                                setIsAnalyzing(false);
+                            }
+                        }}
+                    >
+                        {isAnalyzing ? <ActivityIndicator color="#fff" /> : (
+                            <>
+                                <Ionicons name="analytics" size={24} color="#fff" />
+                                <ThemedText style={{color: '#fff', fontWeight: 'bold', marginLeft: 8}}>ANALYSER MON TIR</ThemedText>
+                            </>
+                        )}
+                    </TouchableOpacity>
+                </View>
+
+                {/* Similarity Result Overlay */}
+                {comparisonResult && (
+                    <View style={styles.resultOverlay}>
+                        <View style={styles.resultCard}>
+                            <View style={styles.cardHeader}>
+                                <ThemedText type="subtitle">Similarité : {comparisonResult.overall_similarity}%</ThemedText>
+                                <TouchableOpacity onPress={() => setComparisonResult(null)}>
+                                    <Ionicons name="close-circle" size={28} color="#FF3B30" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <RadarChart 
+                                data={[
+                                    { label: "Angle", value: (comparisonResult.breakdown?.release_similarity || 0) / 100 },
+                                    { label: "Genoux", value: (comparisonResult.breakdown?.knee_similarity || 0) / 100 },
+                                    { label: "Extension", value: (comparisonResult.breakdown?.follow_through_similarity || 0) / 100 },
+                                    { label: "Timing", value: 0.8 },
+                                    { label: "Stabilité", value: 0.75 }
+                                ]} 
+                                size={180}
+                            />
+                            
+                            <ThemedText style={styles.proTip}>{comparisonResult.pro_tip}</ThemedText>
+                        </View>
+                    </View>
+                )}
             </View>
         </View>
     );
@@ -234,5 +310,56 @@ const styles = StyleSheet.create({
         color: '#fff', 
         fontSize: 10,
         marginTop: 2,
+    },
+    captureContainer: {
+        position: 'absolute',
+        bottom: 40,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 30,
+    },
+    captureButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 14,
+        borderRadius: 30,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+    },
+    resultOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+    },
+    resultCard: {
+        width: width * 0.85,
+        backgroundColor: '#1C1C1E',
+        borderRadius: 20,
+        padding: 20,
+        alignItems: 'center',
+    },
+    cardHeader: {
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    proTip: {
+        marginTop: 15,
+        textAlign: 'center',
+        color: '#EBEBF5',
+        fontStyle: 'italic',
+        fontSize: 14,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        padding: 12,
+        borderRadius: 10,
     }
 });

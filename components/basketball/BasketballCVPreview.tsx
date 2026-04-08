@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SkiaMaskOverlay } from './SkiaMaskOverlay';
 import {
     ActivityIndicator,
     Alert,
@@ -17,18 +18,26 @@ import {
     View,
 } from 'react-native';
 import Animated, {
+    FadeIn,
     FadeInDown,
+    FadeOut,
     FadeOutUp,
     FlipInXUp,
     LinearTransition,
     SlideInUp,
-    SlideOutUp,
-    ZoomIn
+    ZoomIn,
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+    withSequence,
+    withDelay,
+    Easing
 } from 'react-native-reanimated';
 import { WebView } from 'react-native-webview';
 import { ThemedText } from '../themed-text';
 import { ThemedView } from '../themed-view';
 import { SectionRenderer } from './SectionRenderer';
+import { basketballCVService } from '@/services/basketballCVService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -50,7 +59,42 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
   );
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackProgress, setPlaybackProgress] = useState(0); 
+  const [playbackProgress, setPlaybackProgress] = useState(0);
+  const [isStingerActive, setIsStingerActive] = useState(false);
+  const [isMaskActive, setIsMaskActive] = useState(false);
+  const [stingerVideos, setStingerVideos] = useState<string[]>([]);
+  const stingerAnim = useSharedValue(SCREEN_HEIGHT);
+  const maskProgress = useSharedValue(0);
+  
+  // Source state for the stinger player
+  const [stingerSource, setStingerSource] = useState<string | null>(null);
+
+  const stingerPlayer = useVideoPlayer(stingerSource, (player) => {
+    if (player) {
+      player.loop = false;
+    }
+  });
+
+  const animatedStingerStyle = useAnimatedStyle(() => ({
+    opacity: withTiming(isStingerActive ? 1 : 0, { duration: isStingerActive ? 600 : 800 }),
+    transform: [
+        { translateY: stingerAnim.value },
+        { scale: withTiming(isStingerActive ? 1 : 1.1, { duration: 800 }) }
+    ]
+  }));
+
+  // Manage stinger vertical position
+  useEffect(() => {
+    if (isStingerActive) {
+        stingerAnim.value = withTiming(0, { duration: 600, easing: Easing.bezier(0.25, 0.1, 0.25, 1) });
+    } else {
+        // Stay at 0 during transition, then reset silenty
+        setTimeout(() => {
+            if (!isStingerActive) stingerAnim.value = SCREEN_HEIGHT;
+        }, 1000);
+    }
+  }, [isStingerActive]);
+
   
   const videoPlayer = useVideoPlayer(generatedVideoUrl || '', (player) => {
     player.loop = true;
@@ -77,6 +121,9 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
   const { t } = useTranslation();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stingerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const maskTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentSection = template.sections[currentSectionIndex];
 
@@ -86,12 +133,11 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
   // Nettoyer les timers au démontage
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      if (stingerTimerRef.current) clearTimeout(stingerTimerRef.current);
+      if (maskTimerRef.current) clearTimeout(maskTimerRef.current);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, []);
 
@@ -109,11 +155,41 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
         });
       }, 100);
 
-      // Timer pour passer à la section suivante
-      timerRef.current = setTimeout(() => {
-        if (currentSectionIndex < template.sections.length - 1) {
-          setCurrentSectionIndex(currentSectionIndex + 1);
-          setPlaybackProgress(0);
+        // Start transitions only if there is a next section
+        const hasNextSection = currentSectionIndex < template.sections.length - 1;
+        
+        if (hasNextSection) {
+            if (template.id.includes('fire') || template.id.includes('street')) {
+                const stingerStartDelay = Math.max(0, currentSection.duration - 600);
+                if (stingerTimerRef.current) clearTimeout(stingerTimerRef.current);
+                stingerTimerRef.current = setTimeout(() => {
+                    setIsStingerActive(true);
+                }, stingerStartDelay);
+            } else {
+                const maskStartDelay = Math.max(0, currentSection.duration - 400);
+                if (maskTimerRef.current) clearTimeout(maskTimerRef.current);
+                maskTimerRef.current = setTimeout(() => {
+                    setIsMaskActive(true);
+                    maskProgress.value = withTiming(1, { duration: 800 });
+                }, maskStartDelay);
+            }
+        }
+
+        // Timer pour passer à la section suivante
+        timerRef.current = setTimeout(() => {
+          if (hasNextSection) {
+            setCurrentSectionIndex(currentSectionIndex + 1);
+            setPlaybackProgress(0);
+            
+            // Hide transitions
+            if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+            hideTimerRef.current = setTimeout(() => {
+                setIsStingerActive(false);
+                if (isMaskActive) {
+                    maskProgress.value = withTiming(0, { duration: 400 });
+                    setTimeout(() => setIsMaskActive(false), 400);
+                }
+            }, 2000);
         } else {
           // Fin de la lecture
           setIsPlaying(false);
@@ -141,6 +217,64 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
     };
   }, [isPlaying, currentSectionIndex, currentSection.duration, template.sections.length]);
 
+  // Fetch stinger videos (and use local fallbacks for Fire Mode)
+  useEffect(() => {
+    const fetchStingers = async () => {
+        const isFire = template.id.includes('fire');
+        const category = isFire ? 'fire_mode' : (template.id.includes('neon') ? 'neon' : 'classic');
+        const url = `${basketballCVService.getBaseUrl()}/transitions/${category}`;
+        
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.videos && data.videos.length > 0) {
+                setStingerVideos(data.videos);
+            } else if (isFire) {
+                // Fallback local local flame videos
+                setStingerVideos([
+                    require('../../assets/videos/basketball/fire_mode1.mp4'),
+                    require('../../assets/videos/basketball/fire_mode2.mp4')
+                ]);
+            }
+        } catch (e) {
+            console.error('Failed to fetch stinger videos, using local fallbacks:', e);
+            if (isFire) {
+                setStingerVideos([
+                    require('../../assets/videos/basketball/fire_mode1.mp4'),
+                    require('../../assets/videos/basketball/fire_mode2.mp4')
+                ]);
+            }
+        }
+    };
+    fetchStingers();
+  }, [template.id]);
+
+  // Effect to manage stinger playback and preparation
+  useEffect(() => {
+    if (isStingerActive && stingerPlayer) {
+        stingerPlayer.play();
+    } else if (!isStingerActive && stingerVideos.length > 0 && stingerPlayer) {
+        // Prepare the NEXT stinger source when the current one is finished
+        const nextVideo = stingerVideos[Math.floor(Math.random() * stingerVideos.length)];
+        const fullSource = typeof nextVideo === 'string' ? `${basketballCVService.getBaseUrl()}${nextVideo}` : nextVideo;
+        
+        if (stingerPlayer.replaceAsync) {
+            stingerPlayer.replaceAsync(fullSource);
+        } else {
+            stingerPlayer.replace(fullSource);
+        }
+    }
+  }, [isStingerActive, stingerVideos.length, stingerPlayer]);
+
+  // Pre-load first stinger when videos are fetched
+  useEffect(() => {
+    if (stingerVideos.length > 0) {
+        const nextVideo = stingerVideos[Math.floor(Math.random() * stingerVideos.length)];
+        const fullSource = typeof nextVideo === 'string' ? `${basketballCVService.getBaseUrl()}${nextVideo}` : nextVideo;
+        setStingerSource(fullSource);
+    }
+  }, [stingerVideos.length]);
+
   const handlePreviousSection = () => {
     if (currentSectionIndex > 0) {
       setCurrentSectionIndex(currentSectionIndex - 1);
@@ -158,6 +292,10 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
   };
 
   const handleSelectSection = (index: number) => {
+    if (index !== currentSectionIndex && (template.id.includes('fire') || template.id.includes('street'))) {
+        setIsStingerActive(true);
+        setTimeout(() => setIsStingerActive(false), 2500);
+    }
     setCurrentSectionIndex(index);
     setIsPlaying(false);
     setPlaybackProgress(0);
@@ -298,56 +436,82 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
             </View>
           ) : (
             <>
+              {/* Introduction Image Overlay (Fades out when playing starts) */}
+              {!isPlaying && currentSectionIndex === 0 && (
+                <View style={StyleSheet.absoluteFill}>
+                  <Animated.Image 
+                    source={template.thumbnail}
+                    style={StyleSheet.absoluteFill}
+                    exiting={FadeOut.duration(2000)}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+
               {/* Section Container with Dynamic Transitions */}
               <Animated.View
                 key={`${currentSection.id}-renderer`}
                 entering={
-                    template.id === 'basketball-ai-elite'
-                    ? ZoomIn.duration(400).springify()
-                    : currentSectionIndex % 3 === 0 
-                    ? SlideInUp.duration(600).springify().damping(15) 
-                    : currentSectionIndex % 3 === 1 
-                    ? FlipInXUp.duration(800) 
-                    : ZoomIn.duration(600).springify()
+                    currentSection.transitionEffect === 'glitch' 
+                    ? FadeIn.duration(200).delay(100)
+                    : currentSection.transitionEffect === 'flash'
+                    ? FadeIn.duration(100)
+                    : currentSection.transitionEffect === 'blur'
+                    ? ZoomIn.duration(800)
+                    : currentSection.transitionEffect === 'zoom'
+                    ? ZoomIn.duration(600).springify()
+                    : currentSection.transitionEffect === 'slide'
+                    ? SlideInUp.duration(600).springify().damping(15)
+                    : FadeIn.duration(600)
                 }
                 exiting={
-                    template.id === 'basketball-ai-elite'
-                    ? ZoomIn.duration(200)
-                    : SlideOutUp.duration(400)
+                    currentSection.transitionEffect === 'flash'
+                    ? FadeOutUp.duration(100)
+                    : FadeOutUp.duration(400)
                 }
-                style={styles.sectionContainer}
+                style={[styles.sectionContainer, { opacity: withTiming(isStingerActive ? 0 : 1, { duration: 800 }) }]}
               >
                 <SectionRenderer
+                    templateId={template.id}
                     section={currentSection}
                     playerData={playerData}
                     theme={template.theme}
                     isPlaying={isPlaying}
                 />
               </Animated.View>
-
-              {/* Section Title Overlay */}
-              <Animated.View 
-                key={`${currentSection.id}-overlay`}
-                entering={FadeInDown.springify().damping(12)}
-                exiting={FadeOutUp.duration(200)}
-                style={[
-                    styles.sectionTitleOverlay, 
-                    { borderLeftColor: template.theme.primary, borderLeftWidth: 4 },
-                    template.id === 'basketball-ai-elite' && { backgroundColor: 'rgba(255, 140, 0, 0.1)', borderColor: template.theme.primary }
-                ]}
-              >
-                <View style={styles.sectionTitleContent}>
-                  <ThemedText style={styles.sectionTitle}>{currentSection.title}</ThemedText>
-                  <ThemedText style={[styles.sectionInfo, { color: template.theme.primary }]}>
-                    {t('common.section') || 'Section'} {currentSectionIndex + 1}/{template.sections.length}
-                  </ThemedText>
-                </View>
-                <ThemedText style={[styles.sectionDuration, { color: template.theme.accent }]}>
-                  {currentSection.duration / 1000}s
-                </ThemedText>
-              </Animated.View>
             </>
           )}
+
+          {/* STINGER OVERLAY (Custom Video Transition Preview) - Using expo-av for better overlay reliability */}
+          <Animated.View 
+             pointerEvents={isStingerActive ? "auto" : "none"}
+             style={[
+                 StyleSheet.absoluteFill,
+                 { 
+                     zIndex: 999999, 
+                     justifyContent: 'center', 
+                     alignItems: 'center', 
+                      backgroundColor: '#000'
+                 },
+                 animatedStingerStyle
+             ]}
+          >
+             <VideoView 
+                 player={stingerPlayer}
+                 style={[StyleSheet.absoluteFill]} 
+                 contentFit="cover"
+                 nativeControls={false}
+             />
+             
+             {/* Fallback Fire Image if no videos are found */}
+             {stingerVideos.length === 0 && (
+                <Animated.Image 
+                    source={require('../../assets/images/basketball/fire.png')}
+                    style={{ width: '120%', height: '120%', opacity: 1 }}
+                    resizeMode="cover"
+                />
+             )}
+          </Animated.View>
 
           {(generatedVideoUrl || eliteDraftUrl) && (
             <TouchableOpacity 
@@ -363,45 +527,12 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
             </TouchableOpacity>
           )}
 
-          {isDemo && !showRealVideo && (
-            <Animated.View 
-              entering={FlipInXUp.delay(500)}
-              style={styles.demoCallToAction}
-            >
-              <TouchableOpacity 
-                 style={[styles.useTemplateBtn, { backgroundColor: template.theme.primary }]}
-                 onPress={onEdit}
-              >
-                <ThemedText style={styles.useTemplateText}>
-                  {t('cv.use_this_template') || 'Utiliser ce template'}
-                </ThemedText>
-                <Ionicons name="arrow-forward" size={20} color="#000" />
-              </TouchableOpacity>
-            </Animated.View>
-          )}
-
-          {/* Stats Overlay (Dynamic) */}
-           {currentSection.type === 'stats' && playerData.stats && (
-              <Animated.View 
-                entering={FadeInDown.delay(300).springify()}
-                style={styles.statsOverlay}
-              >
-                  <View style={styles.statBadge}>
-                     <ThemedText style={styles.statValue}>{playerData.stats.pointsPerGame}</ThemedText>
-                     <ThemedText style={styles.statLabel}>{t('cv.form.steps.stats.ppg')}</ThemedText>
-                  </View>
-                  <View style={styles.statBadge}>
-                     <ThemedText style={styles.statValue}>{playerData.stats.reboundsPerGame}</ThemedText>
-                     <ThemedText style={styles.statLabel}>{t('cv.form.steps.stats.rpg')}</ThemedText>
-                  </View>
-                  <View style={styles.statBadge}>
-                     <ThemedText style={styles.statValue}>{playerData.stats.assistsPerGame}</ThemedText>
-                     <ThemedText style={styles.statLabel}>{t('cv.form.steps.stats.apg')}</ThemedText>
-                  </View>
-              </Animated.View>
+           {/* MASK TRANSITION (CapCut Style Reveal) */}
+           {isMaskActive && (
+               <SkiaMaskOverlay progress={maskProgress} type="circle" color="#000" />
            )}
 
-          {/* Progress Bar */}
+           {/* Progress Bar */}
           <View style={styles.progressBarContainer}>
             <Animated.View 
                 layout={LinearTransition}
@@ -461,66 +592,52 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
           )}
         </View>
 
-        {/* Section Selector */}
-        <View style={[styles.sectionSelector, { backgroundColor: cardBackground, borderBottomColor: borderColor }]} testID="section-selector">
-          <ThemedText style={styles.sectionSelectorTitle}>{t('cv.form.cv_sections')}</ThemedText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.sectionSelectorContent}
-          >
-            {template.sections.map((section, index) => (
-              <TouchableOpacity
-                key={section.id}
-                testID={`section-button-${index}`}
+        {/* Section Title Indicator (Moved outside/below template) */}
+        {viewMode === 'template' && (
+            <Animated.View 
+                key={`${currentSection.id}-indicator`}
+                entering={FadeInDown.springify().damping(12)}
                 style={[
-                  styles.sectionButton,
-                  { backgroundColor: backgroundSecondary },
-                  currentSectionIndex === index && { backgroundColor: tintColor },
+                    styles.sectionIndicatorBar, 
+                    { borderLeftColor: template.theme.primary, borderLeftWidth: 4, backgroundColor: backgroundSecondary }
                 ]}
-                onPress={() => handleSelectSection(index)}
-              >
-                <View style={styles.sectionButtonContent}>
-                  <Ionicons
-                    name={
-                      section.type === 'intro'
-                        ? 'person'
-                        : section.type === 'profile'
-                        ? 'card'
-                        : section.type === 'offensive'
-                        ? 'basketball'
-                        : section.type === 'defensive'
-                        ? 'shield'
-                        : section.type === 'history'
-                        ? 'time'
-                        : 'stats-chart'
-                    }
-                    size={20}
-                    color={currentSectionIndex === index ? '#fff' : textSecondary}
-                  />
-                  <ThemedText
-                    style={[
-                      styles.sectionButtonThemedText,
-                      currentSectionIndex === index &&
-                        styles.sectionButtonThemedTextActive,
-                    ]}
-                  >
-                    {section.title}
-                  </ThemedText>
+            >
+                <View style={styles.sectionTitleContent}>
+                    <ThemedText style={styles.sectionTitleSmall}>{currentSection.title}</ThemedText>
+                    <ThemedText style={[styles.sectionInfo, { color: template.theme.primary }]}>
+                        {t('common.section') || 'Section'} {currentSectionIndex + 1}/{template.sections.length}
+                    </ThemedText>
                 </View>
-                <ThemedText
-                  style={[
-                    styles.sectionButtonDuration,
-                    currentSectionIndex === index &&
-                      styles.sectionButtonDurationActive,
-                  ]}
-                >
-                  {section.duration / 1000}s
-                </ThemedText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+                <View style={styles.sectionDurationBox}>
+                    <ThemedText style={[styles.sectionDurationSmall, { color: template.theme.accent }]}>
+                        {currentSection.duration / 1000}s
+                    </ThemedText>
+                </View>
+            </Animated.View>
+        )}
+
+        {/* Stats Summary (Moved outside/below template when type is stats) */}
+        {viewMode === 'template' && currentSection.type === 'stats' && playerData.stats && (
+            <Animated.View 
+                entering={FadeInDown.delay(100).springify()}
+                style={[styles.statsBelowTemplate, { backgroundColor: cardBackground, borderColor }]}
+            >
+                <View style={styles.statItemBelow}>
+                    <ThemedText style={styles.statValueSmall}>{playerData.stats.pointsPerGame}</ThemedText>
+                    <ThemedText style={styles.statLabelSmall}>PPG</ThemedText>
+                </View>
+                <View style={styles.statItemBelow}>
+                    <ThemedText style={styles.statValueSmall}>{playerData.stats.reboundsPerGame}</ThemedText>
+                    <ThemedText style={styles.statLabelSmall}>RPG</ThemedText>
+                </View>
+                <View style={styles.statItemBelow}>
+                    <ThemedText style={styles.statValueSmall}>{playerData.stats.assistsPerGame}</ThemedText>
+                    <ThemedText style={styles.statLabelSmall}>APG</ThemedText>
+                </View>
+            </Animated.View>
+        )}
+
+
 
         {/* Player Info Summary - Modern Cards */}
         <Animated.View 
@@ -628,28 +745,18 @@ export const BasketballCVPreview: React.FC<BasketballVideoPreviewProps & { gener
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* Export Button */}
-      <View style={[styles.footer, { backgroundColor: cardBackground }]}>
-        <TouchableOpacity
-          style={[styles.exportButton, { backgroundColor: tintColor }, isExporting && styles.exportingButton]}
-          onPress={handleExport}
-          disabled={isExporting}
-        >
-          {isExporting ? (
-            <>
-              <ActivityIndicator color="#fff" />
-              <ThemedText style={styles.exportButtonThemedText}>
-                {exportProgress?.message || 'Export en cours...'}
-              </ThemedText>
-            </>
-          ) : (
-            <>
-              <Ionicons name="download-outline" size={24} color="#fff" />
-              <ThemedText style={styles.exportButtonThemedText}>{t('cv.form.contact.export_video')}</ThemedText>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
+      {/* Use Template Button - hidden in demo mode */}
+      {!isDemo && (
+        <View style={[styles.footer, { backgroundColor: cardBackground }]}>
+          <TouchableOpacity
+            style={[styles.exportButton, { backgroundColor: tintColor }]}
+            onPress={onBack}
+          >
+            <Ionicons name="checkmark-circle-outline" size={24} color="#fff" />
+            <ThemedText style={styles.exportButtonThemedText}>{t('cv.use_template')}</ThemedText>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Barre de progression quand export en cours */}
       {isExporting && exportProgress && (
@@ -758,63 +865,60 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
   },
-  sectionTitleOverlay: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    padding: 15,
-    borderRadius: 20,
+  sectionIndicatorBar: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
-  sectionTitleContent: {
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 22,
+  sectionTitleSmall: {
+    fontSize: 16,
     fontWeight: '900',
-    color: '#fff',
     letterSpacing: 0.5,
     marginBottom: 2,
     textTransform: 'uppercase',
   },
+  sectionDurationBox: {
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  sectionDurationSmall: {
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  sectionTitleContent: {
+    flex: 1,
+  },
   sectionInfo: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     opacity: 0.7,
     textTransform: 'uppercase',
   },
-  sectionDuration: {
-    fontSize: 13,
-    fontWeight: '900',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  statsOverlay: {
-    position: 'absolute',
-    bottom: 30,
-    left: 20,
-    right: 20,
+  statsBelowTemplate: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    borderRadius: 20,
     padding: 15,
+    marginHorizontal: 16,
+    marginTop: 10,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  statItemBelow: {
+    alignItems: 'center',
+  },
+  statValueSmall: {
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  statLabelSmall: {
+    fontSize: 10,
+    fontWeight: '800',
+    opacity: 0.6,
   },
   statBadge: {
     alignItems: 'center',
@@ -894,77 +998,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
   },
-  demoCallToAction: {
-    position: 'absolute',
-    top: 90,
-    alignSelf: 'center',
-    zIndex: 100,
-  },
-  useTemplateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 30,
-    gap: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  useTemplateText: {
-    color: '#000',
-    fontSize: 14,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
-  sectionSelector: {
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  sectionSelectorTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#888',
-    paddingHorizontal: 20,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  sectionSelectorContent: {
-    paddingHorizontal: 20,
-    gap: 10,
-  },
-  sectionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 15,
-    minWidth: 100,
-  },
-  sectionButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  sectionButtonThemedText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  sectionButtonThemedTextActive: {
-    color: '#fff',
-  },
-  sectionButtonDuration: {
-    fontSize: 10,
-    fontWeight: '800',
-    opacity: 0.5,
-  },
-  sectionButtonDurationActive: {
-    color: '#fff',
-    opacity: 0.8,
-  },
+
   playerInfoContainer: {
     marginVertical: 16,
   },

@@ -11,6 +11,8 @@ export interface BookingSession {
     price: number;
     location: string;
     status: BookingStatus;
+    type?: string;
+    notes?: string;
     createdAt?: any;
     updatedAt?: any;
 }

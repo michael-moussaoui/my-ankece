@@ -1,588 +1,290 @@
 import { BasketballTemplate } from '@/types/basketball/template';
 
 /**
- * Template Basketball professionnel
+ * PACK ESSENTIEL (3 Templates)
  */
-export const BASKETBALL_PRO_TEMPLATE: BasketballTemplate = {
-    id: 'basketball-pro-cv',
-    name: 'Pack Elite Pro',
-    description: 'Le template ultime pour les pros : Photo plein pied, Highlights attaque/défense, Stats avancées et Parcours complet.',
-    thumbnail: 'https://via.placeholder.com/300x200/7c3aed/FFFFFF?text=Basketball+CV+Pro',
-    isPremium: false,
-    tier: 'pro',
-    totalDuration: 51000,
 
-    theme: {
-        primary: '#7c3aed', // Premium Violet
-        secondary: '#5b21b6',
-        accent: '#00E5FF', // Cyan Harmonieux
-        text: '#FFFFFF',
-        background: '#1a1a1a',
-    },
-
-    transitions: {
-        type: 'fade',
-        duration: 500,
-    },
-
-    sections: [
-        // 1. INTRO - Photo en tenue corps entier
-        {
-            id: 'intro',
-            type: 'intro',
-            title: 'Introduction',
-            duration: 5000, // 5 secondes
-            backgroundColor: '#1a1a1a',
-            backgroundGradient: {
-                colors: ['#1a1a1a', '#7c3aed'],
-                angle: 135,
-            },
-            layout: {
-                photoPosition: { x: 12.5, y: 12.5, width: 75, height: 75 },
-                textZones: [
-                    {
-                        id: 'name',
-                        field: 'firstName',
-                        x: 50,
-                        y: 85,
-                        fontSize: 48,
-                        color: '#FFFFFF',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        format: 'uppercase',
-                    },
-                    {
-                        id: 'lastname',
-                        field: 'lastName',
-                        x: 50,
-                        y: 90,
-                        fontSize: 52,
-                        color: '#00E5FF',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        format: 'uppercase',
-                    },
-                ],
-            },
-        },
-
-        // 2. PROFIL - Informations personnelles
-        {
-            id: 'profile',
-            type: 'profile',
-            title: 'Profil',
-            duration: 6000, // 6 secondes
-            backgroundColor: '#7c3aed',
-            layout: {
-                photoPosition: { x: 5, y: 20, width: 25, height: 60 },
-                textZones: [
-                    {
-                        id: 'age-label',
-                        field: 'custom',
-                        x: 40,
-                        y: 20,
-                        fontSize: 16,
-                        color: '#FFFFFF',
-                        fontWeight: 'normal',
-                        label: 'cv.form.steps.identity.age',
-                    },
-                    {
-                        id: 'age',
-                        field: 'age',
-                        x: 40,
-                        y: 25,
-                        fontSize: 32,
-                        color: '#00E5FF',
-                        fontWeight: 'bold',
-                    },
-                    {
-                        id: 'height-label',
-                        field: 'custom',
-                        x: 65,
-                        y: 20,
-                        fontSize: 16,
-                        color: '#FFFFFF',
-                        fontWeight: 'normal',
-                        label: 'cv.form.steps.identity.height',
-                    },
-                    {
-                        id: 'height',
-                        field: 'height',
-                        x: 65,
-                        y: 25,
-                        fontSize: 32,
-                        color: '#00E5FF',
-                        fontWeight: 'bold',
-                    },
-                    {
-                        id: 'position-label',
-                        field: 'custom',
-                        x: 40,
-                        y: 40,
-                        fontSize: 16,
-                        color: '#FFFFFF',
-                        fontWeight: 'normal',
-                        label: 'cv.form.steps.identity.position',
-                    },
-                    {
-                        id: 'position',
-                        field: 'position',
-                        x: 40,
-                        y: 45,
-                        fontSize: 28,
-                        color: '#00E5FF',
-                        fontWeight: 'bold',
-                    },
-                    {
-                        id: 'club-label',
-                        field: 'custom',
-                        x: 40,
-                        y: 60,
-                        fontSize: 16,
-                        color: '#FFFFFF',
-                        fontWeight: 'normal',
-                        label: 'cv.form.steps.identity.current_club',
-                    },
-                    {
-                        id: 'club',
-                        field: 'currentClub',
-                        x: 40,
-                        y: 65,
-                        fontSize: 24,
-                        color: '#FFFFFF',
-                        fontWeight: 'bold',
-                    },
-                ],
-            },
-        },
-
-        // 3. PARCOURS - Historique des clubs
-        {
-            id: 'history',
-            type: 'history',
-            title: 'Parcours',
-            duration: 7000, // 7 secondes
-            backgroundColor: '#2a2a2a',
-            layout: {
-                textZones: [
-                    {
-                        id: 'history-title',
-                        field: 'custom',
-                        x: 50,
-                        y: 10,
-                        fontSize: 40,
-                        color: '#00E5FF',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        label: 'cv.form.steps.scouting.history_title',
-                    },
-                    // Les clubs seront ajoutés dynamiquement
-                ],
-            },
-        },
-        // 3.5 PALMARÈS
-        {
-            id: 'achievements',
-            type: 'history',
-            title: 'Palmarès',
-            duration: 6000,
-            backgroundColor: '#1a1a1a',
-            layout: {
-                textZones: [
-                    {
-                        id: 'achievements-title',
-                        field: 'custom',
-                        x: 50,
-                        y: 10,
-                        fontSize: 40,
-                        color: '#7c3aed',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        label: 'cv.form.steps.palmares.title',
-                    },
-                ],
-            },
-        },
-
-        // 4. VIDÉO OFFENSIVE
-        {
-            id: 'offensive',
-            type: 'offensive',
-            title: 'Compétences Offensives',
-            duration: 10000, // 10 secondes
-            backgroundColor: '#1a1a1a',
-            layout: {
-                videoPosition: { x: 0, y: 15, width: 100, height: 70 },
-                textZones: [
-                    {
-                        id: 'offensive-title',
-                        field: 'custom',
-                        x: 50,
-                        y: 5,
-                        fontSize: 32,
-                        color: '#00E5FF',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        label: 'cv.form.steps.scouting.offensive_title',
-                    },
-                ],
-            },
-        },
-
-        // 5. VIDÉO DÉFENSIVE
-        {
-            id: 'defensive',
-            type: 'defensive',
-            title: 'Compétences Défensives',
-            duration: 10000, // 10 secondes
-            backgroundColor: '#1a1a1a',
-            layout: {
-                videoPosition: { x: 0, y: 15, width: 100, height: 70 },
-                textZones: [
-                    {
-                        id: 'defensive-title',
-                        field: 'custom',
-                        x: 50,
-                        y: 5,
-                        fontSize: 32,
-                        color: '#00E5FF',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        label: 'cv.form.steps.scouting.defensive_title',
-                    },
-                ],
-            },
-        },
-
-        // 6. STATISTIQUES (optionnel)
-        {
-            id: 'stats',
-            type: 'stats',
-            title: 'Statistiques',
-            duration: 7000, // 7 secondes
-            backgroundColor: '#7c3aed',
-            layout: {
-                textZones: [
-                    {
-                        id: 'stats-title',
-                        field: 'custom',
-                        x: 50,
-                        y: 10,
-                        fontSize: 40,
-                        color: '#FFFFFF',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        label: 'cv.form.steps.stats.title',
-                    },
-                    // Les stats seront ajoutées dynamiquement
-                ],
-            },
-        },
-    ],
-};
-
-/**
- * Template Basketball Simple (version gratuite)
- */
-export const BASKETBALL_SIMPLE_TEMPLATE: BasketballTemplate = {
-    id: 'basketball-simple-cv',
-    name: 'Pack Essentiel',
-    description: 'Simple, rapide et efficace. Idéal pour un profil clair avec photo et vos meilleurs moments en 30 secondes.',
-    thumbnail: 'https://via.placeholder.com/300x200/0288D1/FFFFFF?text=Basketball+Simple',
+export const TEMPLATE_CLASSIC_NBA: BasketballTemplate = {
+    id: 'basketball-classic-nba',
+    name: 'Classic NBA',
+    description: 'Holographique, fond noir, textes dorés. Le style NBA traditionnel.',
+    thumbnail: require('../assets/images/basketball/classic.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_classic_nba_preview.mp4',
     isPremium: false,
     tier: 'essentiel',
     totalDuration: 30000,
-
     theme: {
-        primary: '#0288D1',
-        secondary: '#01579B',
-        accent: '#E1F5FE', // Bleu très clair
+        primary: '#FFD700', // Gold
+        secondary: '#000000',
+        accent: '#FFFFFF',
         text: '#FFFFFF',
         background: '#000000',
     },
-
     sections: [
-        {
-            id: 'intro',
-            type: 'intro',
-            title: 'Introduction',
-            duration: 5000,
-            backgroundColor: '#000000',
-            layout: {
-                photoPosition: { x: 25, y: 15, width: 50, height: 70 },
-                textZones: [
-                    {
-                        id: 'fullname',
-                        field: 'firstName',
-                        x: 50,
-                        y: 90,
-                        fontSize: 44,
-                        color: '#FFFFFF',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                    },
-                ],
-            },
-        },
-        {
-            id: 'profile',
-            type: 'profile',
-            title: 'Profil',
-            duration: 8000,
-            backgroundColor: '#0288D1',
-            layout: {
-                textZones: [
-                    {
-                        id: 'position',
-                        field: 'position',
-                        x: 50,
-                        y: 40,
-                        fontSize: 36,
-                        color: '#E1F5FE',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                    },
-                    {
-                        id: 'club',
-                        field: 'currentClub',
-                        x: 50,
-                        y: 55,
-                        fontSize: 28,
-                        color: '#FFFFFF',
-                        fontWeight: 'normal',
-                        textAlign: 'center',
-                    },
-                ],
-            },
-        },
-        {
-            id: 'offensive',
-            type: 'offensive',
-            title: 'Attaque',
-            duration: 8000,
-            backgroundColor: '#000000',
-            layout: {
-                videoPosition: { x: 0, y: 10, width: 100, height: 80 },
-                textZones: [],
-            },
-        },
-        {
-            id: 'defensive',
-            type: 'defensive',
-            title: 'Défense',
-            duration: 9000,
-            backgroundColor: '#000000',
-            layout: {
-                videoPosition: { x: 0, y: 10, width: 100, height: 80 },
-                textZones: [],
-            },
-        },
-    ],
+        { id: 'intro', type: 'intro', title: 'Start', duration: 4000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'vignette', layout: { photoPosition: { x: 25, y: 15, width: 50, height: 70 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 90, fontSize: 40, color: '#FFD700', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'Profile', duration: 6000, backgroundColor: '#111', transitionEffect: 'slide', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'off-1', type: 'offensive', title: 'Offense', duration: 10000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'none', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'def-1', type: 'defensive', title: 'Defense', duration: 10000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'none', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+    ]
+};
+
+export const TEMPLATE_STREET_BALL: BasketballTemplate = {
+    id: 'basketball-street-ball',
+    name: 'Street Ball',
+    description: 'Urban, graffiti animé, couleurs vives. Pour un style playground.',
+    thumbnail: require('../assets/images/basketball/street.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_street_preview.mp4',
+    isPremium: false,
+    tier: 'essentiel',
+    totalDuration: 39000,
+    theme: {
+        primary: '#FF4500', // Orange brûlé
+        secondary: '#000000',
+        accent: '#FFFFFF',
+        text: '#FFFFFF',
+        background: '#1A1A1A',
+    },
+    sections: [
+        { id: 'intro', type: 'intro', title: 'STREET', duration: 5000, backgroundColor: '#1A1A1A', transitionEffect: 'slide', overlayEffect: 'none', layout: { photoPosition: { x: 10, y: 20, width: 80, height: 75 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 10, fontSize: 40, color: '#FF4500', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'STREET CARD', duration: 6000, backgroundColor: '#000', transitionEffect: 'slide', overlayEffect: 'grain', layout: { textZones: [] } },
+        { id: 'off-1', type: 'offensive', title: 'CROSSOVER', duration: 14000, backgroundColor: '#000', transitionEffect: 'slide', overlayEffect: 'none', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'def-1', type: 'defensive', title: 'LOCKDOWN', duration: 14000, backgroundColor: '#000', transitionEffect: 'slide', overlayEffect: 'none', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+    ]
+};
+
+export const TEMPLATE_CLEAN_PRO: BasketballTemplate = {
+    id: 'basketball-clean-pro',
+    name: 'Clean Pro',
+    description: 'Épuré blanc/noir, typographie moderne. Minimaliste et efficace.',
+    thumbnail: require('../assets/images/basketball/clean.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_clean_preview.mp4',
+    isPremium: false,
+    tier: 'essentiel',
+    totalDuration: 34000,
+    theme: {
+        primary: '#2D3436', // Anthracite
+        secondary: '#FFFFFF', // Pure White for light shadows
+        accent: '#2160FF', // New Vibrant Sport Blue
+        text: '#2D3436',
+        background: '#F0F2F5', // Neumorphic Base
+    },
+    sections: [
+        { id: 'intro', type: 'intro', title: 'CLEAN', duration: 5000, backgroundColor: '#FFFFFF', transitionEffect: 'fade', overlayEffect: 'none', layout: { photoPosition: { x: 25, y: 20, width: 50, height: 60 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 85, fontSize: 35, color: '#2D3436', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'PROFILE', duration: 7000, backgroundColor: '#F0F2F5', transitionEffect: 'fade', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'off-1', type: 'offensive', title: 'HIGHLIGHTS', duration: 11000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'none', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'def-1', type: 'defensive', title: 'STOPS', duration: 11000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'none', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+    ]
 };
 
 /**
- * Template AI ELITE - Le futur du scouting
+ * PACK ELITE (3 Templates supplémentaires)
  */
-export const BASKETBALL_AI_ELITE_TEMPLATE: BasketballTemplate = {
-    id: 'basketball-ai-elite',
-    name: 'Pack AI Elite',
-    description: 'Le futur du scouting. Intégration totale de vos analyses IA avec visuels high-tech et données vérifiées.',
-    thumbnail: 'https://via.placeholder.com/300x200/00E5FF/000000?text=AI+Elite+CV',
+
+export const TEMPLATE_FIRE_MODE: BasketballTemplate = {
+    id: 'basketball-fire-mode',
+    name: 'Fire Mode',
+    description: 'Flammes, rouge/orange, énergie maximale. Démarquez-vous par votre intensité.',
+    thumbnail: require('../assets/images/basketball/fire.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_fire_preview.mp4',
     isPremium: true,
     tier: 'elite',
     totalDuration: 46000,
-
     theme: {
-        primary: '#FF8C00', // Professional Orange (Match backend accent)
-        secondary: '#1C1C20', // Card color (Match backend bg_card)
-        accent: '#B4B4BE', // Light muted grey (Match backend text_secondary)
+        primary: '#FFD700', // Gold
+        secondary: '#000000',
+        accent: '#FF0000', // Fire Red
         text: '#FFFFFF',
-        background: '#0F0F12', // Very dark Charcoal (Match backend bg_dark)
+        background: '#000000',
     },
-
-    transitions: {
-        type: 'zoom',
-        duration: 400,
-    },
-
     sections: [
-        {
-            id: 'ai-intro',
-            type: 'intro',
-            title: 'AI Scanning',
-            duration: 4000,
-            backgroundColor: '#000000',
-            layout: {
-                photoPosition: { x: 0, y: 0, width: 100, height: 100 },
-                textZones: [
-                    {
-                        id: 'elite-title',
-                        field: 'custom',
-                        x: 50,
-                        y: 10,
-                        fontSize: 24,
-                        color: '#00E5FF',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        label: 'cv.ai_scouting_report',
-                        format: 'uppercase',
-                    },
-                    {
-                        id: 'player-name',
-                        field: 'firstName',
-                        x: 50,
-                        y: 45,
-                        fontSize: 40,
-                        color: '#B4B4BE',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        format: 'uppercase',
-                    },
-                    {
-                        id: 'player-lastname',
-                        field: 'lastName',
-                        x: 50,
-                        y: 52,
-                        fontSize: 80,
-                        color: '#FF8C00',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        format: 'uppercase',
-                    },
-                    {
-                        id: 'player-pos',
-                        field: 'position',
-                        x: 50,
-                        y: 72,
-                        fontSize: 25,
-                        color: '#FFFFFF',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        format: 'uppercase',
-                    },
-                ],
-            },
-        },
-        {
-            id: 'ai-profile',
-            type: 'profile',
-            title: 'Biometric Profile',
-            duration: 6000,
-            backgroundColor: '#090909',
-            layout: {
-                photoPosition: { x: 50, y: 10, width: 45, height: 80 },
-                textZones: [
-                    {
-                        id: 'bio-tag',
-                        field: 'custom',
-                        x: 10,
-                        y: 15,
-                        fontSize: 14,
-                        color: '#00E5FF',
-                        fontWeight: 'bold',
-                        label: '[ BIO_DATA ]',
-                    },
-                    { id: 'age', field: 'age', x: 10, y: 30, fontSize: 32, color: '#FFFFFF', fontWeight: 'bold', label: 'cv.form.steps.identity.age_short' },
-                    { id: 'height', field: 'height', x: 10, y: 40, fontSize: 32, color: '#FFFFFF', fontWeight: 'bold', label: 'cv.form.steps.identity.height_short' },
-                    { id: 'pos', field: 'position', x: 10, y: 55, fontSize: 24, color: '#FF8C00', fontWeight: 'bold' },
-                    { id: 'club', field: 'currentClub', x: 10, y: 75, fontSize: 20, color: '#B4B4BE', fontWeight: 'normal' },
-                ],
-            },
-        },
-        {
-            id: 'ai-stats',
-            type: 'stats',
-            title: 'Advanced Analytics',
-            duration: 7000,
-            backgroundColor: '#000000',
-            layout: {
-                textZones: [
-                    {
-                        id: 'stats-header',
-                        field: 'custom',
-                        x: 50,
-                        y: 10,
-                        fontSize: 30,
-                        color: '#B4B4BE',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        label: 'cv.form.steps.stats.kpi',
-                    },
-                ],
-            },
-        },
-        // AI PALMARÈS
-        {
-            id: 'achievements',
-            type: 'history',
-            title: 'Palmarès',
-            duration: 6000,
-            backgroundColor: '#090909',
-            layout: {
-                textZones: [
-                    {
-                        id: 'achievements-title',
-                        field: 'custom',
-                        x: 50,
-                        y: 10,
-                        fontSize: 40,
-                        color: '#FF8C00',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        label: 'cv.form.steps.palmares.title',
-                    },
-                ],
-            },
-        },
-        {
-            id: 'ai-offensive',
-            type: 'offensive',
-            title: 'Offensive Breakdown',
-            duration: 10000,
-            backgroundColor: '#000000',
-            layout: {
-                videoPosition: { x: 5, y: 15, width: 90, height: 60 },
-                textZones: [
-                    {
-                        id: 'off-tag',
-                        field: 'custom',
-                        x: 10,
-                        y: 80,
-                        fontSize: 18,
-                        color: '#FF8C00',
-                        fontWeight: 'bold',
-                        label: 'cv.form.steps.scouting.offensive_highlights',
-                    },
-                ],
-            },
-        },
-        {
-            id: 'ai-defensive',
-            type: 'defensive',
-            title: 'Defensive Breakdown',
-            duration: 10000,
-            backgroundColor: '#000000',
-            layout: {
-                videoPosition: { x: 5, y: 15, width: 90, height: 60 },
-                textZones: [
-                    {
-                        id: 'def-tag',
-                        field: 'custom',
-                        x: 10,
-                        y: 80,
-                        fontSize: 18,
-                        color: '#FF8C00',
-                        fontWeight: 'bold',
-                        label: 'cv.form.steps.scouting.defensive_highlights',
-                    },
-                ],
-            },
-        },
-    ],
+        { id: 'intro', type: 'intro', title: 'FIRE', duration: 5000, backgroundColor: '#000', transitionEffect: 'zoom', overlayEffect: 'none', layout: { photoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 20, fontSize: 50, color: '#FFD700', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'FIRE PROFILE', duration: 6000, backgroundColor: '#111', backgroundImage: require('../assets/images/basketball/basket_fire_court_empty.png'), transitionEffect: 'zoom', overlayEffect: 'flames', layout: { textZones: [] } },
+        { id: 'stats', type: 'stats', title: 'STATS', duration: 8000, backgroundColor: '#000', backgroundImage: require('../assets/images/basketball/basket_fire_scoreboard.png'), transitionEffect: 'zoom', overlayEffect: 'flames', layout: { textZones: [] } },
+        { id: 'offensive-1', type: 'offensive', title: 'ELITE OFFENSE', duration: 10000, backgroundColor: '#000', backgroundVideo: require('../assets/videos/basketball/offensive1.mp4'), transitionEffect: 'zoom', overlayEffect: 'flames', layout: { videoPosition: { x: 2.5, y: 2.5, width: 95, height: 95 }, textZones: [] } },
+        { id: 'offensive-2', type: 'offensive', title: 'ELITE OFFENSE', duration: 10000, backgroundColor: '#000', backgroundVideo: require('../assets/videos/basketball/offensive2.mp4'), transitionEffect: 'zoom', overlayEffect: 'flames', layout: { videoPosition: { x: 2.5, y: 2.5, width: 95, height: 95 }, textZones: [] } },
+        { id: 'defensive-1', type: 'defensive', title: 'ELITE DEFENSE', duration: 10000, backgroundColor: '#000', backgroundVideo: require('../assets/videos/basketball/defensive1.mp4'), transitionEffect: 'paper-tear', overlayEffect: 'flames', layout: { videoPosition: { x: 2.5, y: 2.5, width: 95, height: 95 }, textZones: [] } },
+        { id: 'defensive-2', type: 'defensive', title: 'ELITE DEFENSE', duration: 10000, backgroundColor: '#000', backgroundVideo: require('../assets/videos/basketball/defensive2.mp4'), transitionEffect: 'paper-tear', overlayEffect: 'flames', layout: { videoPosition: { x: 2.5, y: 2.5, width: 95, height: 95 }, textZones: [] } },
+        { id: 'achievements', type: 'achievements', title: 'TITLES', duration: 7000, backgroundColor: '#000', backgroundImage: require('../assets/images/basketball/basket_fire_trophy.png'), transitionEffect: 'zoom', overlayEffect: 'flames', layout: { textZones: [] } },
+    ]
+};
+
+export const TEMPLATE_ICE_COLD: BasketballTemplate = {
+    id: 'basketball-ice-cold',
+    name: 'Ice Cold',
+    description: 'Glace cristal, bleu/blanc, premium. Calme et précision sous pression.',
+    thumbnail: require('../assets/images/basketball/ice.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_ice_preview.mp4',
+    isPremium: true,
+    tier: 'elite',
+    totalDuration: 51000,
+    theme: {
+        primary: '#00E5FF', // Cyan Ice
+        secondary: '#FFFFFF',
+        accent: '#B2EBF2',
+        text: '#FFFFFF',
+        background: '#050505',
+    },
+    sections: [
+        { id: 'intro', type: 'intro', title: 'ICE', duration: 6000, backgroundColor: '#050505', transitionEffect: 'blur', overlayEffect: 'none', layout: { photoPosition: { x: 10, y: 10, width: 80, height: 80 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 85, fontSize: 40, color: '#00E5FF', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'COLD PRO', duration: 6000, backgroundColor: '#050505', backgroundImage: require('../assets/images/basketball/ice.png'), transitionEffect: 'fade', overlayEffect: 'vignette', layout: { textZones: [] } },
+        { id: 'stats', type: 'stats', title: 'ANALYTICS', duration: 8000, backgroundColor: '#050505', transitionEffect: 'blur', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'offensive', type: 'offensive', title: 'COLD FINISH', duration: 12000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'none', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'defensive', type: 'defensive', title: 'CHILL DEFENSE', duration: 12000, backgroundColor: '#000', transitionEffect: 'paper-tear', overlayEffect: 'none', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'achievements', type: 'achievements', title: 'HISTORY', duration: 7000, backgroundColor: '#050505', transitionEffect: 'blur', overlayEffect: 'none', layout: { textZones: [] } },
+    ]
+};
+
+export const TEMPLATE_GALAXY: BasketballTemplate = {
+    id: 'basketball-galaxy',
+    name: 'Galaxy',
+    description: 'Espace, particules étoiles, cinématique. Un talent hors de ce monde.',
+    thumbnail: require('../assets/images/basketball/galaxy.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_galaxy_preview.mp4',
+    isPremium: true,
+    tier: 'elite',
+    totalDuration: 46000,
+    theme: {
+        primary: '#311B92', // Deep Purple
+        secondary: '#00E5FF',
+        accent: '#00E5FF',
+        text: '#FFFFFF',
+        background: '#000005',
+    },
+    sections: [
+        { id: 'intro', type: 'intro', title: 'GALAXY', duration: 6000, backgroundColor: '#000005', transitionEffect: 'zoom', overlayEffect: 'particles', layout: { photoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 50, fontSize: 60, color: '#00E5FF', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'GALAXY ID', duration: 6000, backgroundColor: '#050510', transitionEffect: 'fade', overlayEffect: 'particles', layout: { textZones: [] } },
+        { id: 'stats', type: 'stats', title: 'UNIVERSE DATA', duration: 7000, backgroundColor: '#311B92', transitionEffect: 'zoom', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'offensive', type: 'offensive', title: 'SPACE ATTACK', duration: 10000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'particles', layout: { videoPosition: { x: 10, y: 10, width: 80, height: 80 }, textZones: [] } },
+        { id: 'defensive', type: 'defensive', title: 'STELLAR DEFENSE', duration: 10000, backgroundColor: '#000', transitionEffect: 'paper-tear', overlayEffect: 'particles', layout: { videoPosition: { x: 10, y: 10, width: 80, height: 80 }, textZones: [] } },
+        { id: 'achievements', type: 'achievements', title: 'STAR AWARDS', duration: 7000, backgroundColor: '#000005', transitionEffect: 'zoom', overlayEffect: 'particles', layout: { textZones: [] } },
+    ]
+};
+
+/**
+ * PACK ELITE PRO (4 Templates supplémentaires)
+ */
+
+export const TEMPLATE_CHAMPIONS_LEAGUE: BasketballTemplate = {
+    id: 'basketball-champions-league',
+    name: 'Champions League',
+    description: 'Or/noir, trophées animés, prestige. Le niveau des champions.',
+    thumbnail: require('../assets/images/basketball/champions.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_champions_preview.mp4',
+    isPremium: true,
+    tier: 'pro',
+    totalDuration: 36000,
+    theme: {
+        primary: '#C5A059',
+        secondary: '#1A1A1A',
+        accent: '#FFFFFF',
+        text: '#FFFFFF',
+        background: '#000000',
+    },
+    sections: [
+        { id: 'intro', type: 'intro', title: 'CHAMPIONS', duration: 7000, backgroundColor: '#000', transitionEffect: 'slide', overlayEffect: 'none', layout: { photoPosition: { x: 20, y: 10, width: 60, height: 80 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 92, fontSize: 45, color: '#C5A059', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'ELITE CARD', duration: 6000, backgroundColor: '#111', transitionEffect: 'fade', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'stats', type: 'stats', title: 'PRO STATS', duration: 8000, backgroundColor: '#C5A059', transitionEffect: 'zoom', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'palmares', type: 'palmares', title: 'PALMARES', duration: 10000, backgroundColor: '#1A1A1A', transitionEffect: 'fade', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'off-1', type: 'offensive', title: 'OFFENSE I', duration: 15000, backgroundColor: '#000', transitionEffect: 'zoom', overlayEffect: 'grain', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'off-2', type: 'offensive', title: 'OFFENSE II', duration: 15000, backgroundColor: '#000', transitionEffect: 'flash', overlayEffect: 'grain', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'def-1', type: 'defensive', title: 'DEFENSE I', duration: 15000, backgroundColor: '#000', transitionEffect: 'paper-tear', overlayEffect: 'grain', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'contact', type: 'contact', title: 'CONTACT', duration: 7000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'none', layout: { textZones: [] } },
+    ]
+};
+
+export const TEMPLATE_NEON_CITY: BasketballTemplate = {
+    id: 'basketball-neon-city',
+    name: 'Neon City',
+    description: 'Cyberpunk, néons colorés, ultra moderne. Style futuriste déchaîné.',
+    thumbnail: require('../assets/images/basketball/neon.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_neon_preview.mp4',
+    isPremium: true,
+    tier: 'pro',
+    totalDuration: 62000,
+    theme: {
+        primary: '#FF00FF',
+        secondary: '#00FFFF',
+        accent: '#FFFF00',
+        text: '#FFFFFF',
+        background: '#050505',
+    },
+    sections: [
+        { id: 'intro', type: 'intro', title: 'NEON', duration: 5000, backgroundColor: '#050505', transitionEffect: 'glitch', overlayEffect: 'none', layout: { photoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 10, fontSize: 40, color: '#FF00FF', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'CYBER CARD', duration: 6000, backgroundColor: '#111', transitionEffect: 'glitch', overlayEffect: 'grain', layout: { textZones: [] } },
+        { id: 'stats', type: 'stats', title: 'CYBER STATS', duration: 7000, backgroundColor: '#FF00FF', transitionEffect: 'glitch', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'palmares', type: 'palmares', title: 'CYBER LEGACY', duration: 8000, backgroundColor: '#050505', transitionEffect: 'glitch', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'off-1', type: 'offensive', title: 'CYBER ATTACK I', duration: 12000, backgroundColor: '#000', transitionEffect: 'glitch', overlayEffect: 'grain', layout: { videoPosition: { x: 5, y: 5, width: 90, height: 90 }, textZones: [] } },
+        { id: 'off-2', type: 'offensive', title: 'CYBER ATTACK II', duration: 12000, backgroundColor: '#000', transitionEffect: 'glitch', overlayEffect: 'grain', layout: { videoPosition: { x: 5, y: 5, width: 90, height: 90 }, textZones: [] } },
+        { id: 'def-1', type: 'defensive', title: 'CYBER DEFENSE I', duration: 12000, backgroundColor: '#000', transitionEffect: 'paper-tear', overlayEffect: 'grain', layout: { videoPosition: { x: 5, y: 5, width: 90, height: 90 }, textZones: [] } },
+        { id: 'contact', type: 'contact', title: 'CONNECT', duration: 7000, backgroundColor: '#050505', transitionEffect: 'fade', overlayEffect: 'none', layout: { textZones: [] } },
+    ]
+};
+
+export const TEMPLATE_CINEMATIC: BasketballTemplate = {
+    id: 'basketball-cinematic',
+    name: 'Cinematic',
+    description: 'Hollywood, noir et blanc + couleur, dramatique. Votre carrière est un film.',
+    thumbnail: require('../assets/images/basketball/cinematic.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_cinematic_preview.mp4',
+    isPremium: true,
+    tier: 'pro',
+    totalDuration: 88000,
+    theme: {
+        primary: '#FFFFFF',
+        secondary: '#000000',
+        accent: '#E50914', // Netflix Red
+        text: '#FFFFFF',
+        background: '#000000',
+    },
+    sections: [
+        { id: 'intro', type: 'intro', title: 'CINEMATIC', duration: 8000, backgroundColor: '#000', transitionEffect: 'blur', overlayEffect: 'vignette', layout: { photoPosition: { x: 0, y: 20, width: 100, height: 60 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 85, fontSize: 55, color: '#E50914', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'STAR CARD', duration: 6000, backgroundColor: '#050505', transitionEffect: 'fade', overlayEffect: 'vignette', layout: { textZones: [] } },
+        { id: 'stats', type: 'stats', title: 'ACT I: DATA', duration: 8000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'grain', layout: { textZones: [] } },
+        { id: 'palmares', type: 'palmares', title: 'ACT II: LEGACY', duration: 10000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'off-1', type: 'offensive', title: 'ACT III: OFFENSE I', duration: 15000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'grain', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'off-2', type: 'offensive', title: 'ACT IV: OFFENSE II', duration: 15000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'grain', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'def-1', type: 'defensive', title: 'ACT V: DEFENSE', duration: 20000, backgroundColor: '#000', transitionEffect: 'paper-tear', overlayEffect: 'grain', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'contact', type: 'contact', title: 'CAST / CONTACT', duration: 8000, backgroundColor: '#000', transitionEffect: 'fade', overlayEffect: 'vignette', layout: { textZones: [] } },
+    ]
+};
+
+export const TEMPLATE_CUSTOM_BRAND: BasketballTemplate = {
+    id: 'basketball-custom-brand',
+    name: 'Custom Brand',
+    description: 'Couleurs du club générées automatiquement. Intégration totale avec votre équipe.',
+    thumbnail: require('../assets/images/basketball/brand.png'),
+    videoPreview: 'https://res.cloudinary.com/demo/video/upload/v1/basketball_custom_preview.mp4',
+    isPremium: true,
+    tier: 'pro',
+    totalDuration: 79000,
+    theme: {
+        primary: '#7c3aed',
+        secondary: '#1a1a1a',
+        accent: '#00E5FF',
+        text: '#FFFFFF',
+        background: '#121212',
+    },
+    sections: [
+        { id: 'intro', type: 'intro', title: 'BRAND', duration: 5000, backgroundColor: '#121212', transitionEffect: 'fade', overlayEffect: 'none', layout: { photoPosition: { x: 25, y: 15, width: 50, height: 70 }, textZones: [{ id: 'name', field: 'firstName', x: 50, y: 90, fontSize: 40, color: '#7c3aed', fontWeight: 'bold', textAlign: 'center' }] } },
+        { id: 'profile', type: 'profile', title: 'THE BRAND', duration: 6000, backgroundColor: '#121212', transitionEffect: 'zoom', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'stats', type: 'stats', title: 'PERFORMANCE', duration: 8000, backgroundColor: '#7c3aed', transitionEffect: 'zoom', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'achievements', type: 'achievements', title: 'AWARDS', duration: 8000, backgroundColor: '#121212', transitionEffect: 'fade', overlayEffect: 'none', layout: { textZones: [] } },
+        { id: 'off-1', type: 'offensive', title: 'TEAM OFFENSE I', duration: 15000, backgroundColor: '#000', transitionEffect: 'zoom', overlayEffect: 'grain', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'off-2', type: 'offensive', title: 'TEAM OFFENSE II', duration: 15000, backgroundColor: '#000', transitionEffect: 'zoom', overlayEffect: 'grain', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'def-1', type: 'defensive', title: 'TEAM DEFENSE', duration: 15000, backgroundColor: '#000', transitionEffect: 'paper-tear', overlayEffect: 'grain', layout: { videoPosition: { x: 0, y: 0, width: 100, height: 100 }, textZones: [] } },
+        { id: 'contact', type: 'contact', title: 'GET HIRED', duration: 7000, backgroundColor: '#121212', transitionEffect: 'fade', overlayEffect: 'none', layout: { textZones: [] } },
+    ]
 };
 
 export const BASKETBALL_TEMPLATES = [
-    BASKETBALL_AI_ELITE_TEMPLATE,
-    BASKETBALL_PRO_TEMPLATE,
-    BASKETBALL_SIMPLE_TEMPLATE,
+    TEMPLATE_CLASSIC_NBA,
+    TEMPLATE_STREET_BALL,
+    TEMPLATE_CLEAN_PRO,
+    TEMPLATE_FIRE_MODE,
+    TEMPLATE_ICE_COLD,
+    TEMPLATE_GALAXY,
+    TEMPLATE_CHAMPIONS_LEAGUE,
+    TEMPLATE_NEON_CITY,
+    TEMPLATE_CINEMATIC,
+    TEMPLATE_CUSTOM_BRAND,
 ];

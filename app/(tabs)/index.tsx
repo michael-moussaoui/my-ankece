@@ -123,14 +123,6 @@ export default function HomeScreen() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(800).duration(800)} style={[styles.featureCard, { backgroundColor: colorScheme === 'dark' ? '#222' : '#f5f5f5' }]}>
-            <IconSymbol name="star.fill" size={24} color={tintColor} />
-            <View style={styles.featureTextWrapper}>
-              <ThemedText type="defaultSemiBold">{t('home.feature2_title')}</ThemedText>
-              <ThemedText style={styles.featureDesc}>{t('home.feature2_desc')}</ThemedText>
-            </View>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(1000).duration(800)} style={[styles.featureCard, { backgroundColor: colorScheme === 'dark' ? '#222' : '#f5f5f5' }]}>
             <IconSymbol name="map.fill" size={24} color={tintColor} />
             <View style={styles.featureTextWrapper}>
               <ThemedText type="defaultSemiBold">{t('home.feature3_title')}</ThemedText>
@@ -138,7 +130,7 @@ export default function HomeScreen() {
             </View>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(1200).duration(800)}>
+          <Animated.View entering={FadeInDown.delay(1000).duration(800)}>
             <TouchableOpacity 
               style={[styles.featureCard, { backgroundColor: colorScheme === 'dark' ? '#222' : '#f5f5f5' }]}
               onPress={() => router.push('/coach' as any)}
@@ -153,16 +145,6 @@ export default function HomeScreen() {
           </Animated.View>
         </View>
 
-        {/* Call to Action */}
-        <Animated.View entering={FadeInUp.delay(1000).duration(1000)} style={styles.ctaWrapper}>
-          <TouchableOpacity 
-            style={[styles.ctaButton, { backgroundColor: tintColor }]}
-            onPress={() => router.push('/basket-demo')}
-          >
-            <ThemedText style={styles.ctaText}>{t('home.cta')}</ThemedText>
-            <IconSymbol name="chevron.right" size={20} color="#fff" />
-          </TouchableOpacity>
-        </Animated.View>
       </ScrollView>
     </ThemedView>
   );

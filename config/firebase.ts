@@ -7,6 +7,7 @@ import {
 } from "firebase/auth";
 import { initializeFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
+import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -34,5 +35,8 @@ const db = initializeFirestore(app, {
 // Initialize Functions
 const functions = getFunctions(app, 'europe-west1'); // Or your region
 
-export { auth, db, functions };
+// Initialize Storage
+const storage = getStorage(app);
+
+export { auth, db, functions, storage };
 

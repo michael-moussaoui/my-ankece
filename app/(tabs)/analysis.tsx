@@ -4,6 +4,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useAppTheme } from '@/context/ThemeContext';
 import { useUser } from '@/context/UserContext';
+import { useAuth } from '@/context/AuthContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { expertAiService, ExpertAnalysisResponse, ExpertDribbleResponse, ExpertSessionResponse } from '@/services/ai/expertAiService';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DribbleAnalysisReport } from '../../components/analysis/DribbleAnalysisReport';
 import { ExpertAnalysisReport } from '../../components/analysis/ExpertAnalysisReport';
 import { SessionAnalysisReport } from '../../components/analysis/SessionAnalysisReport';
+import { trackerService } from '@/services/trackerService';
+import { ActivityCard } from '@/components/tracker/ActivityCard';
+import { useFocusEffect } from 'expo-router';
+import { AiStatsPanel } from '@/components/analysis/AiStatsPanel';
 
 export default function AnalysisScreen() {
   const router = useRouter();
@@ -28,8 +33,80 @@ export default function AnalysisScreen() {
   const [dribbleReport, setDribbleReport] = useState<ExpertDribbleResponse | null>(null);
   const [showDribbleReport, setShowDribbleReport] = useState(false);
 
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+  const { user } = useAuth();
+  const [filter, setFilter] = useState<'all' | 'ai' | 'shooting' | 'dribble'>('all');
+  const [shotTypeFilter, setShotTypeFilter] = useState<string>('all');
+
   const [sessionReport, setSessionReport] = useState<ExpertSessionResponse | null>(null);
   const [showSessionReport, setShowSessionReport] = useState(false);
+
+  const SHOT_TYPES = [
+    { key: 'all', label: 'Tous' },
+    { key: '3pt', label: '3 Points' },
+    { key: 'ft', label: 'Lancer Franc' },
+    { key: 'mid', label: 'Mid-Range' },
+  ];
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadActivities();
+    }, [user])
+  );
+
+  const loadActivities = async () => {
+    if (!user) return;
+    setLoadingActivities(true);
+    try {
+      const data = await trackerService.getUnifiedActivity(user.uid, 20); // Get more to have better charts
+      setActivities(data);
+    } catch (error) {
+      console.error("Error loading activities:", error);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  // Aggregation for charts
+  const aiActivities = activities
+    .filter(a => a.activityType === 'ai')
+    .sort((a, b) => (a.date?.seconds || 0) - (b.date?.seconds || 0));
+
+  const accuracyData = aiActivities
+    .filter(a => a.type === 'session' && a.results?.accuracy !== undefined)
+    .map(a => a.results.accuracy);
+
+  const postureData = aiActivities
+    .filter(a => a.type === 'shot' && a.results?.min_elbow_angle !== undefined)
+    .map(a => {
+      // Heuristic score: 100 - error from 90deg - error from vertical lean
+      const errorElbow = Math.abs((a.results.min_elbow_angle || 90) - 90);
+      const errorLean = Math.abs(a.results.avg_torso_lean || 0) * 4;
+      return Math.max(0, Math.min(100, 100 - (errorElbow + errorLean)));
+    });
+
+  const lastAccuracy = accuracyData.length > 0 ? accuracyData[accuracyData.length - 1] : undefined;
+  const lastPosture = postureData.length > 0 ? Math.round(postureData[postureData.length - 1]) : undefined;
+
+  const displayData = React.useMemo(() => {
+    let filtered = activities;
+
+    if (filter !== 'all') {
+      if (filter === 'ai') filtered = filtered.filter(a => a.activityType === 'ai');
+      else if (filter === 'shooting') filtered = filtered.filter(a => a.activityType === 'shooting');
+      else if (filter === 'dribble') filtered = filtered.filter(a => a.activityType === 'dribble');
+    }
+
+    if (shotTypeFilter !== 'all') {
+      filtered = filtered.filter(a => 
+        a.shots?.some((s: any) => s.shotType === shotTypeFilter) || 
+        a.results?.shotType === shotTypeFilter
+      );
+    }
+
+    return filtered.slice(0, 10); // Show recent filtered
+  }, [activities, filter, shotTypeFilter]);
 
   const [status, requestPermission] = ImagePicker.useCameraPermissions();
   const [libraryStatus, requestLibraryPermission] = ImagePicker.useMediaLibraryPermissions();
@@ -121,6 +198,9 @@ export default function AnalysisScreen() {
             results: result.analysis
           }
         });
+        // Save to history
+        await trackerService.saveAiSession(user!.uid, 'shot', result.analysis);
+        loadActivities();
       } else if (type === 'session') {
         const result = await expertAiService.analyzeSession(uri);
         setSessionReport(result);
@@ -133,6 +213,9 @@ export default function AnalysisScreen() {
             results: result.analysis
           }
         });
+        // Save to history
+        await trackerService.saveAiSession(user!.uid, 'session', result.analysis);
+        loadActivities();
       } else {
         const result = await expertAiService.analyzeDribble(uri);
         setDribbleReport(result);
@@ -145,6 +228,9 @@ export default function AnalysisScreen() {
             results: result.analysis
           }
         });
+        // Save to history
+        await trackerService.saveAiSession(user!.uid, 'dribble', result.analysis);
+        loadActivities();
       }
     } catch (error) {
       console.error('Expert Analysis Error:', error);
@@ -276,12 +362,99 @@ export default function AnalysisScreen() {
               </View>
           </View>
 
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Historique de progression</Text>
-          
-          <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
-              <Ionicons name="analytics" size={40} color={colors.border} />
-              <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>Aucun entraînement enregistré aujourd'hui</Text>
+          {/* Visual Progression Section */}
+          <AiStatsPanel 
+            accuracyData={accuracyData} 
+            postureData={postureData} 
+            lastAccuracy={lastAccuracy} 
+            lastPosture={lastPosture} 
+          />
+
+          <View style={styles.historyHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Historique de progression</Text>
+            
+            {/* Category Chips */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+              <TouchableOpacity 
+                onPress={() => setFilter('all')} 
+                style={[styles.filterChip, filter === 'all' && { backgroundColor: accentColor }]}
+              >
+                <Text style={[styles.filterChipText, filter === 'all' && { color: '#fff' }]}>Tous</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => setFilter('ai')} 
+                style={[styles.filterChip, filter === 'ai' && { backgroundColor: accentColor }]}
+              >
+                <Text style={[styles.filterChipText, filter === 'ai' && { color: '#fff' }]}>IA Analyse</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => setFilter('shooting')} 
+                style={[styles.filterChip, filter === 'shooting' && { backgroundColor: accentColor }]}
+              >
+                <Text style={[styles.filterChipText, filter === 'shooting' && { color: '#fff' }]}>Tirs</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => setFilter('dribble')} 
+                style={[styles.filterChip, filter === 'dribble' && { backgroundColor: accentColor }]}
+              >
+                <Text style={[styles.filterChipText, filter === 'dribble' && { color: '#fff' }]}>Dribble</Text>
+              </TouchableOpacity>
+            </ScrollView>
+
+            {/* Sub-filter for Shot Types */}
+            {(filter === 'shooting' || filter === 'all') && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.filterScroll, { marginTop: 8 }]}>
+                {SHOT_TYPES.map(st => (
+                  <TouchableOpacity 
+                    key={st.key}
+                    onPress={() => setShotTypeFilter(st.key)} 
+                    style={[styles.subFilterChip, shotTypeFilter === st.key && { borderColor: accentColor, backgroundColor: accentColor + '10' }]}
+                  >
+                    <Text style={[styles.subFilterChipText, { color: shotTypeFilter === st.key ? accentColor : colors.textSecondary }]}>
+                      {st.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
           </View>
+          
+          {displayData.length > 0 ? (
+            <View style={styles.activityList}>
+              {displayData.map((activity) => {
+                const shotData = shotTypeFilter !== 'all' 
+                        ? (activity.shots?.find((s: any) => s.shotType === shotTypeFilter) || 
+                           (activity.results?.shotType === shotTypeFilter ? activity.results : null))
+                        : null;
+        
+                const processedActivity = {
+                    ...activity,
+                    totalMade: shotData ? shotData.made : activity.totalMade,
+                    totalShots: shotData ? shotData.attempts : activity.totalShots,
+                };
+
+                return (
+                  <ActivityCard 
+                    key={activity.id} 
+                    activity={processedActivity} 
+                    onPress={() => {
+                      Alert.alert(
+                          "Détails de l'activité",
+                          "Cette fonctionnalité d'archivage complet sera disponible prochainement."
+                      );
+                    }}
+                  />
+                );
+              })}
+            </View>
+          ) : (
+            <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
+                <Ionicons name="analytics" size={40} color={colors.border} />
+                <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
+                    {loadingActivities ? "Chargement..." : "Aucun entraînement enregistré aujourd'hui"}
+                </Text>
+            </View>
+          )}
 
         </ScrollView>
 
@@ -398,6 +571,19 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
+  },
+  historyHeader: {
+    marginTop: 24,
+    marginBottom: 8,
+    gap: 12,
+  },
+  filterScroll: { paddingHorizontal: 0, marginBottom: 4 },
+  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: 'rgba(150,150,150,0.1)', marginRight: 8 },
+  filterChipText: { fontSize: 13, fontWeight: '700', color: '#888' },
+  subFilterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(150,150,150,0.2)', marginRight: 6 },
+  subFilterChipText: { fontSize: 11, fontWeight: '600' },
+  activityList: {
+    gap: 0,
   },
   badge: {
       paddingHorizontal: 8,

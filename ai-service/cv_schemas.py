@@ -14,6 +14,11 @@ class ClubInfo(BaseModel):
     league: Optional[str] = None
     number: Optional[int] = None
 
+class Achievement(BaseModel):
+    title: str
+    year: str
+    competition: str
+
 class PlayerStats(BaseModel):
     pointsPerGame: Optional[float] = None
     reboundsPerGame: Optional[float] = None
@@ -38,6 +43,7 @@ class CVPlayerData(BaseModel):
     strengths: List[str] = []
     currentClub: ClubInfo
     clubHistory: List[ClubInfo] = []
+    achievements: List[Achievement] = []
     stats: Optional[PlayerStats] = None
     
     # Media URLs (Cloudinary/Firebase)

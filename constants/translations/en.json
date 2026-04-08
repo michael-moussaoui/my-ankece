@@ -2,7 +2,7 @@
     "tabs": {
         "home": "Home",
         "feed": "Feed",
-        "cv": "Hoops CV",
+        "baller": "Baller",
         "analysis": "Analysis",
         "map": "Courts",
         "coach": "Coach",
@@ -18,16 +18,13 @@
     },
     "home": {
         "title": "Ankece BasketBall",
-        "subtitle": "Your ultimate basketball companion. Find courts, improve your game, and create your pro CV.",
+        "subtitle": "Your ultimate basketball companion. Find courts, improve your game, and connect with the community.",
         "feature1_title": "Level Up Fast",
         "feature1_desc": "Track your training and improve your stats with our analysis tools.",
-        "feature2_title": "Get Noticed",
-        "feature2_desc": "Create an interactive CV and share it with clubs and scouts.",
         "feature3_title": "Find a court",
         "feature3_desc": "Locate playgrounds around you and find partners to play.",
         "feature4_title": "Level Up with a Coach",
-        "feature4_desc": "Find a certified coach for personalized training sessions.",
-        "cta": "Generate my Video CV"
+        "feature4_desc": "Find a certified coach for personalized training sessions."
     },
     "map": {
         "title": "Playgrounds",
@@ -116,6 +113,61 @@
         "create_success": "Event created successfully!",
         "create_error": "Error creating event."
     },
+    "baller": {
+        "title": "Baller Hub",
+        "subtitle": "Connect, play, and level up with the community.",
+        "tabs": {
+            "explore": "Explore",
+            "feed": "Ads",
+            "crews": "Crews",
+            "profile": "Profile"
+        },
+        "explore": {
+            "title": "Find Players",
+            "quick_match": "AI Quick Match",
+            "quick_match_desc": "Find partners based on your skill level.",
+            "spotlight": "Spotlight of the Week",
+            "search_filters": "Search Filters",
+            "no_results": "No players found in this area."
+        },
+        "feed": {
+            "title": "Ad Feed",
+            "create_ad": "Create an Ad",
+            "filters": {
+                "all": "All",
+                "run": "Runs",
+                "scrimmage": "Scrimmages",
+                "training": "Training",
+                "market": "Market"
+            },
+            "empty": "No ads available. Be the first!",
+            "interest": "I'm interested",
+            "message": "Message"
+        },
+        "crews": {
+            "title": "My Crews",
+            "join_crew": "Join a Crew",
+            "create_crew": "Create a Crew",
+            "members": "members",
+            "level": "Level",
+            "empty": "You don't belong to any Crew yet."
+        },
+        "profile": {
+            "public_view": "View my public profile",
+            "edit_bio": "Edit bio",
+            "stats_title": "My Stats",
+            "achievements": "Achievements",
+            "export_cv": "Export Baller CV",
+            "verified": "Verified Player",
+            "follow": "Follow",
+            "unfollow": "Unfollow"
+        },
+        "actions": {
+            "message": "Message",
+            "invite": "Invite",
+            "challenge": "Challenge"
+        }
+    },
     "cv": {
         "subtitle": "Create your professional player profile with AI",
         "start": "Start my CV",
@@ -148,6 +200,21 @@
         "current_season": "CURRENT SEASON",
         "ai_verified": "AI VERIFIED",
         "ai_scouting_report": "AI SCOUTING REPORT",
+        "offensive_video": "OFFENSIVE CLIP",
+        "defensive_video": "DEFENSIVE CLIP",
+        "player_profile": "PLAYER PROFILE",
+        "position": "POSITION",
+        "height": "HEIGHT",
+        "age": "AGE",
+        "weight": "WEIGHT",
+        "strengths": "STRENGTHS",
+        "years_old": "y/o",
+        "current_club": "CURRENT CLUB",
+        "stats_desc": "Season stats in progress",
+        "interceptions": "STL",
+        "cv_sections": "CV Sections",
+        "share": "Share",
+        "camera_permission_denied": "Camera access denied. Please allow access in settings.",
         "processing_steps": [
             "Analyzing your clips...",
             "Extracting statistics...",
@@ -163,17 +230,45 @@
             "failed": "Generation failed"
         },
         "templates": {
-            "elite": {
-                "name": "AI Elite Pack",
-                "description": "The future of scouting. Total integration of your AI analysis with high-tech visuals and verified data."
+            "classic_nba": {
+                "name": "Classic NBA",
+                "description": "Black background, gold text. Clean and timeless NBA style. Essential Pack."
             },
-            "pro": {
-                "name": "Elite Pro Pack",
-                "description": "The ultimate template for pros: Full-body photo, Offense/Defense highlights, Advanced stats, and full history."
+            "street_ball": {
+                "name": "Street Ball",
+                "description": "Neon orange & electric green. Pure playground energy. Essential Pack."
             },
-            "essential": {
-                "name": "Essential Pack",
-                "description": "Simple, fast, and effective. Ideal for a clear profile with photo and your best moves in 30 seconds."
+            "clean_pro": {
+                "name": "Clean Pro",
+                "description": "White/black, modern typography. Minimalist and sharp. Essential Pack."
+            },
+            "fire_mode": {
+                "name": "Fire Mode",
+                "description": "Fire red, max energy. A design that burns with intensity. Elite Pack."
+            },
+            "ice_cold": {
+                "name": "Ice Cold",
+                "description": "Glacier blue, cold elegance. Calm, precision, efficiency. Elite Pack."
+            },
+            "galaxy": {
+                "name": "Galaxy",
+                "description": "Cosmic purple, star particles. Talent from out of this world. Elite Pack."
+            },
+            "champions_league": {
+                "name": "Champions League",
+                "description": "Gold & black. Trophies and prestige. The level of champions. Elite Pro Pack."
+            },
+            "neon_city": {
+                "name": "Neon City",
+                "description": "Cyberpunk magenta/cyan. Ultra-modern, futuristic and unleashed. Elite Pro Pack."
+            },
+            "cinematic": {
+                "name": "Cinematic",
+                "description": "Deep black, cinematic effect. Netflix red, your career is a movie. Elite Pro Pack."
+            },
+            "custom_brand": {
+                "name": "Custom Brand",
+                "description": "Your club colors. Total integration with your team identity. Elite Pro Pack."
             }
         },
         "time_remaining": "Estimated time remaining: {{time}}s",
@@ -211,11 +306,50 @@
                 "SENIOR": "Senior",
                 "ELITE": "Elite",
                 "PRO": "Pro"
+            },
+            "strengths": {
+                "Scoring": "Scoring",
+                "Three-Point Shooting": "Three-Point Shooting",
+                "Defense": "Defense",
+                "Rebounding": "Rebounding",
+                "Playmaking": "Playmaking",
+                "Athleticism": "Athleticism",
+                "Basketball IQ": "Basketball IQ",
+                "Leadership": "Leadership"
             }
         },
         "form": {
             "previous": "Previous",
             "next": "Next",
+            "export_success_title": "Export Successful",
+            "export_success_msg": "Your video is ready. Do you want to share it?",
+            "contact_title": "CONTACT",
+            "phone": "Phone",
+            "dominant_hand": "Dominant Hand",
+            "category": "Category",
+            "level": "Level",
+            "position": "POSITION",
+            "age": "AGE",
+            "height": "HEIGHT",
+            "weight": "WEIGHT",
+            "years_old": "y/o",
+            "current_club": "CURRENT CLUB",
+            "current_season": "CURRENT SEASON",
+            "stats_desc": "Season stats in progress",
+            "pts": "PTS",
+            "reb": "REB",
+            "ast": "AST",
+            "interceptions": "STL",
+            "shot": "Shot",
+            "free_throws": "FT",
+            "strengths": "STRENGTHS",
+            "offensive_video": "OFFENSIVE CLIP",
+            "defensive_video": "DEFENSIVE CLIP",
+            "player_profile": "PLAYER PROFILE",
+            "cv_sections": "CV Sections",
+            "share": "Share",
+            "no": "No",
+            "camera_permission_denied": "Camera access denied. Please allow in settings.",
             "stepper": {
                 "step1": "Identity",
                 "step2": "Sport Profile",
@@ -365,6 +499,11 @@
                     "NAT": "National",
                     "FED": "Federal Pro B-NM1-NM2",
                     "INT": "International"
+                },
+                "lateralization": {
+                    "Gaucher": "Left-handed",
+                    "Droitier": "Right-handed",
+                    "Ambidextre": "Ambidextrous"
                 }
             },
             "packs": {
@@ -374,6 +513,16 @@
                 "upgrade_needed": "Please upgrade your pack to add more videos.",
                 "locked": "Locked",
                 "choose_template": "Choose this template"
+            },
+            "contact": {
+                "preview": "Preview",
+                "export_video": "Export Video CV",
+                "export_error": "Export failed.",
+                "replay": "Replay",
+                "export_success_title": "Export Successful",
+                "export_success_msg": "Your video is ready. Do you want to share it?",
+                "no": "No",
+                "share": "Share"
             }
         }
     },
@@ -381,8 +530,38 @@
         "search_placeholder": "City, coach...",
         "view_list": "List",
         "view_map": "Map",
-        "no_results": "No coach found",
+        "no_results": "No coaches found",
         "create_profile": "Create Coach Profile",
+        "menu": {
+            "title": "Admin Coach",
+            "dashboard": "Coach Dashboard",
+            "profile": "My Coach Profile",
+            "become": "Become a Coach"
+        },
+        "dashboard": {
+            "greeting": "Hello, {{name}} 👋",
+            "monthlyRevenue": "Monthly Revenue",
+            "upcomingSessions": "Upcoming Sessions",
+            "activePlayers": "Most Active Players",
+            "seeAll": "See All",
+            "programs": "My Programs",
+            "programsSubtitle": "Create and sell your training plans"
+        },
+        "revenue": {
+            "title": "Revenues & Billing",
+            "total": "Total Receipts",
+            "breakdown": "Revenue Breakdown",
+            "recentPayments": "Recent Payments",
+            "createPaymentLink": "Create payment link",
+            "exportPdf": "Export history as PDF",
+            "exportDev": "PDF export will be available soon in the pro version.",
+            "status": {
+                "paid": "Paid",
+                "pending": "Pending",
+                "refunded": "Refunded",
+                "cancelled": "Cancelled"
+            }
+        },
         "admin": {
             "title": "Coach Validation",
             "management_title": "Coach Management",
@@ -411,29 +590,36 @@
             }
         },
         "agenda": {
-            "title": "My Agenda",
-            "add_session": "Add time slot",
+            "title": "My Planning",
+            "add_session": "Add a slot",
+            "slots": "slot(s)",
             "select_day": "Select a day",
             "no_sessions": "No slots for this day",
             "session_type": "Session type",
             "individual": "Individual",
             "group": "Group",
-            "startTime": "Start time",
-            "endTime": "End time",
-            "price": "Price",
+            "startTime": "Start Time",
+            "endTime": "End Time",
+            "price_free": "Free session",
+            "price": "Price (€)",
             "location": "Location",
-            "save_session": "Save time slot",
-            "delete_session": "Delete time slot",
-            "confirm_delete": "Delete this slot?",
-            "reserve": "Book now",
-            "confirm_reserve": "Confirm booking?",
-            "my_bookings": "My bookings",
+            "location_placeholder": "e.g. City Gym",
+            "save_session": "Save slot",
+            "delete_session": "Delete slot",
+            "confirm_delete": "Do you want to delete this slot?",
             "booked_by": "Booked by",
+            "types": {
+                "shooting": "Shooting Drill",
+                "physical": "Physical Prep",
+                "technical": "Technical / Dribble",
+                "mental": "Mental & Strategy",
+                "live": "Live Video Session",
+                "other": "Other"
+            },
             "status": {
                 "available": "Available",
                 "reserved": "Reserved",
-                "cancelled": "Cancelled",
-                "completed": "Completed"
+                "cancelled": "Cancelled"
             }
         },
         "form": {
@@ -478,14 +664,60 @@
             "update_success": "Profile updated and resubmitted for validation",
             "error": "Error while creating profile."
         },
-        "filters": {
-            "title": "Filters",
-            "reset": "Reset",
-            "specialties": "Specialties",
-            "levels": "Levels",
-            "budget": "Budget (Hourly rate)",
-            "max_price": "Max {{price}}€",
-            "apply": "Apply filters"
+        "students": {
+            "title": "My Students",
+            "search_placeholder": "Search by name...",
+            "last_booking": "Last session",
+            "sessions": "session(s)",
+            "empty": "No students yet.",
+            "add_student": "Add Student",
+            "invite_code": "Your Invite Code",
+            "invite_description": "Share this code with your students so they can find you and book easily.",
+            "details": {
+                "progression": "Progression",
+                "history": "History",
+                "notes": "Coach Notes",
+                "notes_placeholder": "Add your observations about this student (private)...",
+                "save_notes": "Save Notes",
+                "stats": {
+                    "shooting": "Shooting Rate",
+                    "physical": "Points per session",
+                    "attendance": "Attendance"
+                }
+            }
+        },
+        "programs": {
+            "title": "My Programs",
+            "create": "Create a program",
+            "edit_title": "Edit Program",
+            "not_found": "Program not found",
+            "edit": "Edit Program",
+            "form": {
+                "basic_info": "Basic Info",
+                "title_label": "Program Title",
+                "title_placeholder": "e.g. Elite Shooting - 4 Weeks",
+                "desc_label": "Description",
+                "desc_placeholder": "Explain the goals of this program...",
+                "price_label": "Selling Price ($)",
+                "duration_label": "Duration (weeks)",
+                "level_label": "Required Level"
+            },
+            "builder": {
+                "add_session": "Add Session",
+                "session_title": "Session Title",
+                "session_placeholder": "e.g. Warmup & Shooting Routine",
+                "add_drill": "Add Drill",
+                "reorder": "Reorder",
+                "drill": {
+                    "name": "Drill name",
+                    "sets": "Sets",
+                    "reps": "Reps",
+                    "duration": "Duration",
+                    "intensity": "Intensity"
+                }
+            },
+            "empty": "No programs created yet.",
+            "save_success": "Program saved successfully!"
         },
         "profile": {
             "book": "Book",
@@ -548,19 +780,17 @@
             "intermediate": "Intermediate",
             "advanced": "Advanced",
             "elite": "Elite / Pro"
-        },
-        "students": {
-            "title": "My Students",
-            "empty": "You don't have any students yet.",
-            "last_booking": "Last session",
-            "sessions": "session(s)"
         }
     },
+
     "common": {
         "loading": "Loading...",
         "error": "Error",
+        "info": "Information",
         "success": "Success",
         "cancel": "Cancel",
+        "all": "All",
+        "save": "Save",
         "camera": "Camera",
         "gallery": "Gallery",
         "choose_option": "Choose an option",
@@ -584,6 +814,17 @@
         "camera_permission": "Camera Permission",
         "camera_permission_msg": "Camera access is required to take a photo."
     },
+    "tracker": {
+        "training": "Workouts",
+        "shooting_session": "Shooting Session",
+        "shooting_desc": "Record your shots",
+        "dribble_workout": "Dribble Workout",
+        "dribble_desc": "Master the ball",
+        "dribble_touch": "Dribble & Touch",
+        "dribble_touch_desc": "Interactive AI Game",
+        "shoot_analysis": "Shoot Analysis",
+        "shoot_analysis_desc": "AI Shot Analysis"
+    },
     "legal": {
         "title": "Legal Information",
         "mentions": "Legal Notice",
@@ -594,5 +835,128 @@
         "cgu_content": "# Terms of Service (ToS)\n\n## 1. Purpose\nThese Terms of Service define the terms and conditions for using the Ankece application.\n\n## 2. Access to Service\nAccess to the service is open to any user with a valid account.",
         "cgv_content": "# Terms of Sale (ToS)\n\n## 1. Products and Services\nAnkece offers Elite Pro subscriptions to access advanced features.\n\n## 2. Payment\nPayments are secured and processed via the Stripe platform.",
         "privacy_content": "# Privacy Policy\n\n## 1. Data Collection\nAnkece collects data necessary for the proper functioning of the application and your player profile.\n\n## 2. Data Use\nYour data is never sold and is only used to improve your basketball experience."
+    },
+    "analytics": {
+        "title": "My Progression",
+        "dashboard": "Performance Tracking",
+        "report": {
+            "title": "Session Report",
+            "success": "Report saved!",
+            "rating": "Overall rating",
+            "intensity": "Perceived Intensity (1-10)",
+            "strengths": "Strengths",
+            "improvements": "Areas for improvement",
+            "comment": "Coach's Comment",
+            "submit": "Publish Report",
+            "player_notes": "My Player Log",
+            "player_notes_placeholder": "Your feelings, your difficulties...",
+            "player_question": "How did your session go?",
+            "save_log": "Save my log",
+            "added_notes": "Log entry added",
+            "add_notes": "Add my log",
+            "coach_log": "Coach Session Report",
+            "history": "Report History",
+            "skills": {
+                "shooting": "Shooting Accuracy",
+                "defense": "Defense",
+                "ball_handling": "Ball Handling",
+                "footwork": "Footwork",
+                "conditioning": "Conditioning",
+                "tactical": "Tactical IQ",
+                "rebounding": "Rebounding",
+                "leadership": "Leadership"
+            }
+        },
+        "monthly": {
+            "title": "AI Monthly Recap",
+            "summary": "Ankece AI Analysis",
+            "roadmap": "My Roadmap",
+            "integrations": "Integrations",
+            "ai_optimized": "Ankece AI Optimized",
+            "points_per_match": "PPG",
+            "three_pt_rate": "3PT %",
+            "drills_suggested": "Coach Suggested Drills",
+            "pro_intensity": "Pro Intensity"
+        },
+        "integrations": {
+            "title": "Data Sources",
+            "subtitle": "Connect your third-party applications to centralize your progression stats.",
+            "security_info": "Your data is encrypted and shared only with your coach to optimize your training.",
+            "homecourt_desc": "Import your shooting sessions and heatmaps.",
+            "hudl_desc": "Match stats and video analysis.",
+            "apple_desc": "Recovery, sleep and calories.",
+            "catapult_desc": "Pro physical training load."
+        }
+    },
+    "academy": {
+        "title": "Street Academy",
+        "lab": "The Concrete Lab",
+        "store": "Invasion Store",
+        "myContent": "My Programs",
+        "createDrill": "New Drill",
+        "createProgram": "Start the Invasion",
+        "drills": "Drills",
+        "programs": "Programs",
+        "weeks": "Weeks",
+        "weeks_one": "{{count}} Week",
+        "weeks_other": "{{count}} Weeks",
+        "drillsCount_one": "{{count}} Drill",
+        "drillsCount_other": "{{count}} Drills",
+        "synopsis": "SYNOPSIS",
+        "curriculum": "CURRICULUM",
+        "instructions": "INSTRUCTIONS",
+        "tagsLabel": "TAGS",
+        "certified": "CERTIFIED CONTENT BY ANKECE ACADEMY",
+        "noInstructions": "No instructions provided.",
+        "noContent": "Nothing here yet.",
+        "saveDrill": "SAVE DRILL",
+        "publishProgram": "PUBLISH INVASION",
+        "unlockAccess": "UNLOCK ACCESS",
+        "selectDrills": "SELECT DRILLS ({{count}} selected)",
+        "form": {
+            "title": "TITLE",
+            "description": "DESCRIPTION",
+            "videoUrl": "VIDEO URL",
+            "duration": "DURATION",
+            "difficulty": "DIFFICULTY",
+            "tags": "TAGS (comma separated)",
+            "price": "PRICE (€)",
+            "weeksCount": "WEEKS",
+            "thumbnailUrl": "THUMBNAIL URL",
+            "placeholders": {
+                "drillTitle": "e.g. Stephen Curry Shooting Drill",
+                "drillDesc": "How to perform this drill...",
+                "videoUrl": "Direct MP4 link or Cloudinary",
+                "tags": "Shooting, Handles, Warmup",
+                "programTitle": "e.g. Vertigo Jump Program",
+                "programDesc": "What will users achieve...?",
+                "price": "0.00",
+                "weeks": "Count",
+                "thumbnail": "Image URL link"
+            }
+        },
+        "alerts": {
+            "fillRequired": "Please fill title and video URL.",
+            "fillProgram": "Please fill title and select at least one drill.",
+            "saveSuccess": "Content created successfully!",
+            "saveError": "Could not create content.",
+            "noDrills": "No drills found. Create drills first."
+        },
+        "categories": {
+            "shooting": "Shoot Studio",
+            "handles": "Handles & Flow",
+            "physical": "Groot Force",
+            "tactical": "Underground IQ"
+        },
+        "difficulty": {
+            "beginner": "Rookie",
+            "intermediate": "Pro",
+            "advanced": "Legend"
+        },
+        "buyNow": "Unlock",
+        "owned": "Unlocked",
+        "free": "FREE",
+        "liveInvasion": "Court Invasion Live",
+        "analysisStudio": "Underground Studio"
     }
 }

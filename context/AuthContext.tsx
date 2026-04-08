@@ -11,7 +11,7 @@ import {
     User
 } from 'firebase/auth';
 import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 
 interface AuthContextType {
@@ -31,12 +31,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const userRef = useRef<User | null>(null);
+  const profileRef = useRef<UserProfile | null>(null);
+
+  const updateLastSeen = async (uid: string) => {
+    try {
+      await updateDoc(doc(db, DB_COLLECTIONS.USERS, uid), {
+        lastSeen: new Date().toISOString()
+      });
+    } catch (e) {
+      console.warn("Could not update lastSeen:", e);
+    }
+  };
 
   useEffect(() => {
     let unsubscribeProfile: (() => void) | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      userRef.current = firebaseUser;
+      
+      if (firebaseUser) {
+        updateLastSeen(firebaseUser.uid);
+      }
       
       // Clean up previous profile listener if it exists
       if (unsubscribeProfile) {
@@ -63,36 +81,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
               }
 
-              // Update lastSeen
-              const now = new Date();
-              const lastSeenDate = data.lastSeen ? new Date(data.lastSeen) : null;
-              
-              // If last seen was more than 7 days ago, we could trigger something here
-              if (lastSeenDate) {
-                const diffTime = Math.abs(now.getTime() - lastSeenDate.getTime());
-                const diffDays = diffTime / (1000 * 60 * 60 * 24);
-                
-                if (diffDays > 7 && data.notificationsEnabled) {
-                  notificationService.sendToUser(
-                    firebaseUser.uid,
-                    'system',
-                    'Bon retour !',
-                    'On est ravi de vous revoir ! Reprenez vos entraînements pour rester au top.',
-                    'success'
-                  );
-                }
-              }
-
-              // Update the field in Firestore
-              try {
-                await updateDoc(doc(db, DB_COLLECTIONS.USERS, firebaseUser.uid), {
-                  lastSeen: now.toISOString()
-                });
-              } catch (e) {
-                console.warn("Could not update lastSeen:", e);
-              }
-
-              setProfile({ ...data, id: firebaseUser.uid, lastSeen: now.toISOString() });
+              const updatedProfile = { ...data, id: firebaseUser.uid, lastSeen: data.lastSeen };
+              setProfile(updatedProfile);
+              profileRef.current = updatedProfile;
             } else {
               setProfile(null);
             }
@@ -111,11 +102,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Handle re-engagement notifications based on AppState
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
-        notificationUtils.scheduleReengagementReminder(profile);
+        notificationUtils.scheduleReengagementReminder(profileRef.current);
       } else if (nextAppState === 'active') {
         notificationUtils.cancelReengagementReminders();
+        if (userRef.current) {
+          updateLastSeen(userRef.current.uid);
+        }
       }
     };
 

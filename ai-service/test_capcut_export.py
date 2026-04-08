@@ -17,13 +17,15 @@ async def test_capcut_integration():
             "clubName": "CapCut Team",
             "season": "2024-2025"
         },
+        "templateId": "basketball-classic-nba",
+        "tier": "elite",
         "exportToCapCut": True # This triggers the new logic
     }
     
     print("Testing CapCut Integration...")
     try:
         # Note: This will fail if capcut_server.py is not running on 9001
-        result = await process_video_cv(player_data)
+        result = process_video_cv(player_data)
         if result and result.startswith('http'):
             print(f"SUCCESS: Generated CapCut Draft URL: {result}")
         else:

@@ -1,12 +1,15 @@
 import { AIPoseOverlay } from '@/components/editor/AIPoseOverlay';
 import { BallTrajectoryOverlay } from '@/components/editor/BallTrajectoryOverlay';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
+import { GamificationPopup } from '@/components/ui/GamificationPopup';
 import { UserIconButton } from '@/components/UserIconButton';
 import { useAppTheme } from '@/context/ThemeContext';
 import { useUser } from '@/context/UserContext';
 import { basketDetector } from '@/services/ai/basketDetector';
 import { poseService } from '@/services/ai/poseService';
 import { BallPosition, BasketPosition, TrajectoryAnalysis, trajectoryAnalyzer } from '@/services/ai/trajectoryAnalyzer';
+import { challengeService } from '@/services/challengeService';
+import { trackerService } from '@/services/trackerService';
 import { Ionicons } from '@expo/vector-icons';
 import * as tf from '@tensorflow/tfjs';
 import { cameraWithTensors } from '@tensorflow/tfjs-react-native';
@@ -23,12 +26,14 @@ const TensorCamera = cameraWithTensors(CameraView);
 
 export default function CameraAnalysisScreen() {
     const router = useRouter();
-    const { mode } = useLocalSearchParams<{ mode: 'posture' | 'shooting' | 'dribble' }>();
+    const { mode, challenge } = useLocalSearchParams<{ mode: 'posture' | 'shooting' | 'dribble', challenge?: string }>();
     const { user: profile } = useUser();
     const { accentColor, accentTextColor } = useAppTheme();
     const insets = useSafeAreaInsets();
     const [isSubModalVisible, setIsSubModalVisible] = useState(false);
 
+    // Reward State
+    const [rewardData, setRewardData] = useState<{ visible: boolean; title: string; xp?: number }>({ visible: false, title: '' });
     const [permission, requestPermission] = useCameraPermissions();
     const [isModelReady, setIsModelReady] = useState(false);
     
@@ -60,8 +65,12 @@ export default function CameraAnalysisScreen() {
 
     // Dribble state
     const [dribbleCount, setDribbleCount] = useState(0);
+    const [dribbleMoves, setDribbleMoves] = useState<string[]>([]);
+    const [dribbleSpeed, setDribbleSpeed] = useState(0); // Dribbles per minute
+    const dribbleTimestampsRef = useRef<number[]>([]);
     const lastBallYRef = useRef<number | null>(null);
     const dribbleThreadholdRef = useRef<'down' | 'up'>('down');
+    const lastHandRef = useRef<string | null>(null);
 
     useEffect(() => {
         (async () => {
@@ -106,8 +115,39 @@ export default function CameraAnalysisScreen() {
                                 if (dribbleThreadholdRef.current === 'down' && diff > 5) { // Value in pixels
                                     dribbleThreadholdRef.current = 'up';
                                 } else if (dribbleThreadholdRef.current === 'up' && diff < -5) {
+                                    // Dribble detected!
                                     setDribbleCount(c => c + 1);
                                     dribbleThreadholdRef.current = 'down';
+
+                                    // Advanced Logic: Speed and Moves
+                                    const now = Date.now();
+                                    dribbleTimestampsRef.current.push(now);
+                                    if (dribbleTimestampsRef.current.length > 5) {
+                                        dribbleTimestampsRef.current.shift();
+                                        const duration = (now - dribbleTimestampsRef.current[0]) / 1000;
+                                        setDribbleSpeed(Math.round((dribbleTimestampsRef.current.length / duration) * 60));
+                                    }
+
+                                    // Crossover Detection (Requires hand data)
+                                    if (poses.length > 0) {
+                                        const kp = poses[0].keypoints;
+                                        const leftWrist = kp[15];
+                                        const rightWrist = kp[16];
+                                        
+                                        // Which hand is closer to ball?
+                                        const distL = Math.sqrt(Math.pow(leftWrist.x - ballPos.x, 2) + Math.pow(leftWrist.y - ballPos.y, 2));
+                                        const distR = Math.sqrt(Math.pow(rightWrist.x - ballPos.x, 2) + Math.pow(rightWrist.y - ballPos.y, 2));
+                                        const currentHand = distL < distR ? 'Left' : 'Right';
+
+                                        if (lastHandRef.current && lastHandRef.current !== currentHand) {
+                                            // Hand switched while ball is in middle?
+                                            if (ballPos.x > 50 && ballPos.x < 200) { // Screen center range
+                                                const move = ballPos.y > 150 ? 'Between Legs' : 'Crossover';
+                                                setDribbleMoves(prev => Array.from(new Set([...prev, move])));
+                                            }
+                                        }
+                                        lastHandRef.current = currentHand;
+                                    }
                                 }
                             }
                             lastBallYRef.current = ballPos.y;
@@ -168,6 +208,57 @@ export default function CameraAnalysisScreen() {
         );
     }
 
+    const completeSession = async () => {
+        setIsTrackingBall(false);
+        if (!profile) return;
+
+        const sessionData = mode === 'dribble' 
+            ? { 
+                dribble_count: dribbleCount, 
+                frequency: dribbleSpeed / 60, // Convert BPM back to per-second for backend
+                consistency: 0.85, 
+                moves_detected: dribbleMoves 
+            } 
+            : { makes: stats.made, missed: stats.missed, accuracy: (stats.made / (stats.made + stats.missed || 1)) * 100 };
+
+        try {
+            // Assuming challengeService and trackerService are imported or available
+            // import { challengeService } from '@/services/challengeService';
+            // import { trackerService } from '@/services/trackerService';
+            // These imports would need to be added at the top of the file if not already present.
+            // For this change, I'm assuming they exist or will be added by the user.
+            const reward = await challengeService.calculateSessionXp(sessionData, mode === 'dribble' ? 'dribble' : 'shooting', challenge);
+            
+            if (reward.success) {
+                setRewardData({
+                    visible: true,
+                    title: reward.challenge_completed ? "CHALLENGE RÉUSSI !" : "SESSION TERMINÉE",
+                    xp: reward.xp_earned + reward.bonus_xp
+                });
+
+                // Persist to Firebase
+                if (mode === 'dribble') {
+                    await trackerService.saveDribbleSession(profile.id, profile.displayName || 'User', {
+                        comboType: challenge || 'Free Dribble',
+                        repetitions: dribbleCount,
+                        duration: 60,
+                        difficulty: 'pro'
+                    });
+                } else {
+                    await trackerService.saveShootingSession(profile.id, profile.displayName || 'User', {
+                        type: 'training',
+                        duration: 60,
+                        totalShots: stats.made + stats.missed,
+                        totalMade: stats.made,
+                        shots: []
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Session Completion Error:', e);
+        }
+    };
+
     if (!isModelReady) {
          return (
              <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -193,15 +284,26 @@ export default function CameraAnalysisScreen() {
                 useCustomShadersToResize={false} 
             />
 
-            {/* Overlay Skeleton */}
-            <View style={[StyleSheet.absoluteFill, { zIndex: 10 }]} pointerEvents="none">
-                 {/* Ajustement de l'échelle car on prédit sur 152x200 mais on affiche sur l'écran entier */}
+            {/* AI Overlay put on top of camera */}
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
                 <AIPoseOverlay 
                     poses={poses} 
                     width={tensorDims.width} 
                     height={tensorDims.height} 
                     showAngles={true}
                 />
+            </View>
+
+            {/* Gamification Popup */}
+            <GamificationPopup 
+                visible={rewardData.visible}
+                title={rewardData.title}
+                xp={rewardData.xp}
+                onClose={() => setRewardData({ ...rewardData, visible: false })}
+            />
+            {/* Overlay Skeleton */}
+            <View style={[StyleSheet.absoluteFill, { zIndex: 10 }]} pointerEvents="none">
+                 {/* Ajustement de l'échelle car on prédit sur 152x200 mais on affiche sur l'écran entier */}
                 
                 {/* Debug Pose Count */}
                 <View style={{ position: 'absolute', top: 150, left: 20, backgroundColor: 'rgba(0,0,0,0.7)', padding: 10, borderRadius: 5 }}>
@@ -247,10 +349,24 @@ export default function CameraAnalysisScreen() {
             {/* Stats Bar */}
             <View style={[styles.statsBar, { top: Math.max(insets.top + 60, 100) }]}>
                 {analysisMode === 'dribble' ? (
-                    <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>Dribbles</Text>
-                        <Text style={[styles.statValue, { color: '#FF9500' }]}>{dribbleCount}</Text>
-                    </View>
+                    <>
+                        <View style={styles.statItem}>
+                            <Text style={styles.statLabel}>Dribbles</Text>
+                            <Text style={[styles.statValue, { color: '#FF9500' }]}>{dribbleCount}</Text>
+                        </View>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statItem}>
+                            <Text style={styles.statLabel}>BPM</Text>
+                            <Text style={[styles.statValue, { color: '#34C759' }]}>{dribbleSpeed}</Text>
+                        </View>
+                        <View style={styles.statDivider} />
+                        <View style={styles.statItem}>
+                            <Text style={styles.statLabel}>Moves</Text>
+                            <Text style={[styles.statValue, { fontSize: 12, color: accentColor }]}>
+                                {dribbleMoves.length > 0 ? dribbleMoves.join(', ') : 'Free Style'}
+                            </Text>
+                        </View>
+                    </>
                 ) : (
                     <>
                         <View style={styles.statItem}>
@@ -280,13 +396,13 @@ export default function CameraAnalysisScreen() {
                 <TouchableOpacity 
                     style={[styles.trackButton, { backgroundColor: accentColor }, isTrackingBall && styles.trackButtonActive]}
                     onPress={() => {
-                        if (isTrackingBall) {
-                            setIsTrackingBall(false);
-                        } else {
+                        if (!isTrackingBall) {
                             setIsTrackingBall(true);
                             setBallPositions([]);
                             setTrajectoryAnalysis(null);
                             lastShotResultRef.current = 'unknown';
+                        } else {
+                            completeSession();
                         }
                     }}
                 >
@@ -308,6 +424,10 @@ export default function CameraAnalysisScreen() {
                             setTrajectoryAnalysis(null);
                             setStats({ made: 0, missed: 0 });
                             setDribbleCount(0);
+                            setDribbleMoves([]);
+                            setDribbleSpeed(0);
+                            dribbleTimestampsRef.current = [];
+                            lastHandRef.current = null;
                             setBasket(null);
                             frameCountRef.current = 0;
                             lastShotResultRef.current = 'unknown';

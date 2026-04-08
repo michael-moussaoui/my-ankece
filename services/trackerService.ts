@@ -23,6 +23,7 @@ import {
 
 const SHOOTING_COLLECTION = 'shooting_sessions';
 const DRIBBLE_COLLECTION = 'dribble_sessions';
+const AI_COLLECTION = 'ai_sessions';
 const STATS_COLLECTION = 'user_stats';
 
 export const trackerService = {
@@ -82,20 +83,41 @@ export const trackerService = {
     },
 
     async getAggregatedStats(userId: string, timeframe: 'D' | 'W' | 'M' | 'Y') {
-        // Fetch all sessions for now and group them. 
-        // In production, this would be a separate daily_stats collection or a cloud function.
         const sessions = await this.getAllShootingSessions(userId);
-        if (sessions.length === 0) return [];
+        if (sessions.length === 0) return { volume: [], accuracy: [] };
 
-        const groupedData: Record<string, number> = {};
+        // Better date parsing (handles Firestore Timestamps, JS Dates, strings, etc.)
+        const parseDate = (d: any): Date => {
+            if (!d) return new Date();
+            if (d.toDate && typeof d.toDate === 'function') return d.toDate();
+            if (d instanceof Date) return d;
+            if (d.seconds) return new Date(d.seconds * 1000);
+            const date = new Date(d);
+            return isNaN(date.getTime()) ? new Date() : date;
+        };
+
+        // For 'D', we show individual sessions (last 20) instead of aggregate by day
+        // This makes sure multiple sessions today show as multiple points.
+        if (timeframe === 'D') {
+            const sorted = [...sessions].sort((a, b) => 
+                parseDate(a.date).getTime() - parseDate(b.date).getTime()
+            );
+            
+            const recent = sorted.slice(-20);
+            return {
+                volume: recent.map(s => s.totalMade || 0),
+                accuracy: recent.map(s => s.totalShots > 0 ? Math.round(((s.totalMade || 0) / s.totalShots) * 100) : 0)
+            };
+        }
+
+        const groupedAttempts: Record<string, number> = {};
+        const groupedMade: Record<string, number> = {};
 
         sessions.forEach(session => {
-            const date = session.date?.toDate() || new Date();
+            const date = parseDate(session.date);
             let key = '';
 
-            if (timeframe === 'D') key = date.toISOString().split('T')[0];
-            else if (timeframe === 'W') {
-                // Get start of week (Monday)
+            if (timeframe === 'W') {
                 const d = new Date(date);
                 const day = d.getDay() || 7;
                 d.setHours(-24 * (day - 1));
@@ -104,13 +126,38 @@ export const trackerService = {
             else if (timeframe === 'M') key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
             else if (timeframe === 'Y') key = `${date.getFullYear()}`;
 
-            groupedData[key] = (groupedData[key] || 0) + session.totalMade;
+            groupedMade[key] = (groupedMade[key] || 0) + (session.totalMade || 0);
+            groupedAttempts[key] = (groupedAttempts[key] || 0) + (session.totalShots || 0);
         });
 
-        // Convert to array and sort by date key
-        return Object.keys(groupedData)
-            .sort()
-            .map(date => groupedData[date]);
+        const sortedKeys = Object.keys(groupedMade).sort();
+        
+        const volume = sortedKeys.map(key => groupedMade[key]);
+        const accuracy = sortedKeys.map(key => {
+            const attempts = groupedAttempts[key] || 0;
+            const made = groupedMade[key] || 0;
+            return attempts > 0 ? Math.round((made / attempts) * 100) : 0;
+        });
+
+        return { volume, accuracy };
+    },
+
+    async getUnifiedActivity(userId: string, limitCount = 10) {
+        const [shooting, dribble, ai] = await Promise.all([
+            getDocs(query(collection(db, SHOOTING_COLLECTION), where('userId', '==', userId), orderBy('date', 'desc'), limit(limitCount))),
+            getDocs(query(collection(db, DRIBBLE_COLLECTION), where('userId', '==', userId), orderBy('date', 'desc'), limit(limitCount))),
+            getDocs(query(collection(db, AI_COLLECTION), where('userId', '==', userId), orderBy('date', 'desc'), limit(limitCount)))
+        ]);
+
+        const activities: any[] = [
+            ...shooting.docs.map(doc => ({ id: doc.id, activityType: 'shooting', ...doc.data() })),
+            ...dribble.docs.map(doc => ({ id: doc.id, activityType: 'dribble', ...doc.data() })),
+            ...ai.docs.map(doc => ({ id: doc.id, activityType: 'ai', ...doc.data() }))
+        ];
+
+        return activities
+            .sort((a, b) => (b.date?.seconds || 0) - (a.date?.seconds || 0))
+            .slice(0, limitCount);
     },
 
     // Dribble Sessions
@@ -119,6 +166,16 @@ export const trackerService = {
             ...session,
             userId,
             userName,
+            date: serverTimestamp(),
+        });
+        return docRef.id;
+    },
+
+    async saveAiSession(userId: string, type: 'shot' | 'session' | 'dribble', results: any) {
+        const docRef = await addDoc(collection(db, AI_COLLECTION), {
+            userId,
+            type,
+            results,
             date: serverTimestamp(),
         });
         return docRef.id;

@@ -4,7 +4,7 @@
 
 export interface MediaAsset {
     id: string;
-    uri: string;
+    uri: string | number;
     type: 'video' | 'image';
     duration?: number | null;
     width?: number | null;

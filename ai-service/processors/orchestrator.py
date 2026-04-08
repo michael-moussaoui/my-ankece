@@ -3,17 +3,37 @@ import asyncio
 from typing import Dict, Any
 from cv_schemas import CVTier
 from processors.capcut_exporter import CapCutExporter
+from processors.vectcut_templates import (
+    ClassicNBATemplate, 
+    NeonCityTemplate, 
+    FireModeTemplate, 
+    VectCutClient
+)
 
 logger = logging.getLogger(__name__)
 
 class VideoCVOrchestrator:
     def __init__(self):
         self.capcut = CapCutExporter()
-        # self.unity = UnityExporter() # Coming soon
+        self.client = VectCutClient()
+        
+        # Initialize specialized templates
+        self.templates = {
+            "basketball-classic-nba": ClassicNBATemplate(self.client),
+            "basketball-neon-city": NeonCityTemplate(self.client),
+            "basketball-fire-mode": FireModeTemplate(self.client)
+        }
 
     def generate_cv(self, player_data: Dict[str, Any]):
+        template_id = player_data.get('templateId')
         tier = player_data.get('tier', CVTier.ESSENTIEL.value)
-        logger.info(f"[ORCHESTRATOR] Orchestrating CV for tier: {tier}")
+        
+        logger.info(f"[ORCHESTRATOR] Orchestrating CV. Template: {template_id}, Tier: {tier}")
+
+        # Check if we have a specialized VectCut template for this ID
+        if template_id in self.templates:
+            logger.info(f"[ORCHESTRATOR] Using high-end VectCut Template: {template_id}")
+            return self.templates[template_id].generate(player_data)
 
         if tier == CVTier.ESSENTIEL:
             return self._generate_essentiel(player_data)

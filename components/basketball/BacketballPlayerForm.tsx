@@ -36,6 +36,17 @@ interface VideoClip {
   tag: string;
 }
 
+const AVAILABLE_STRENGTHS = [
+  "Scoring",
+  "Three-Point Shooting",
+  "Defense",
+  "Rebounding",
+  "Playmaking",
+  "Athleticism",
+  "Basketball IQ",
+  "Leadership"
+];
+
 export const BasketballPlayerForm: React.FC<BasketballTemplateFormProps> = ({
   onComplete,
   onCancel,
@@ -86,6 +97,7 @@ export const BasketballPlayerForm: React.FC<BasketballTemplateFormProps> = ({
     snapchat: initialData?.snapchat || '',
     presentationVideo: initialData?.presentationVideo?.uri || null,
     clubLogo: initialData?.currentClub?.clubLogo?.uri || null,
+    strengths: initialData?.strengths || [],
     pack: templateId === 'basketball-ai-elite' ? 'elite' : 'essential'
   });
 
@@ -167,7 +179,9 @@ export const BasketballPlayerForm: React.FC<BasketballTemplateFormProps> = ({
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      quality: 1,
+      allowsEditing: true,
+      videoMaxDuration: 15, // 15 seconds max for highlights
+      quality: 0.8, // Slightly lower quality to reduce size
     });
 
     if (!result.canceled) {
@@ -198,7 +212,8 @@ export const BasketballPlayerForm: React.FC<BasketballTemplateFormProps> = ({
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: true,
-      quality: 1,
+      videoMaxDuration: 30, // 30 seconds max for presentation
+      quality: 0.8,
     });
 
     if (!result.canceled) {
@@ -240,7 +255,7 @@ export const BasketballPlayerForm: React.FC<BasketballTemplateFormProps> = ({
       wingspan: parseInt(formData.wingspan) || 0,
       verticalLeap: parseInt(formData.verticalLeap) || 0,
       dominantHand: formData.lateralization === 'left' ? 'Gaucher' : (formData.lateralization === 'ambi' ? 'Ambidextre' : 'Droitier'),
-      strengths: [],
+      strengths: formData.strengths,
       achievements: formData.achievements,
       currentClub: {
         clubName: formData.club,
@@ -369,6 +384,32 @@ export const BasketballPlayerForm: React.FC<BasketballTemplateFormProps> = ({
           themeColor={accentColor}
           themeTextColor={accentTextColor}
         />
+
+        <ThemedText style={styles.label}>{t('cv.form.strengths') || 'STRENGTHS'}</ThemedText>
+        <View style={styles.strengthsList}>
+          {AVAILABLE_STRENGTHS.map((str) => {
+            const isSelected = formData.strengths.includes(str);
+            return (
+              <TouchableOpacity
+                key={str}
+                style={[
+                  styles.strengthBadge,
+                  isSelected && { backgroundColor: accentColor, borderColor: accentColor }
+                ]}
+                onPress={() => {
+                  const newStrengths = isSelected
+                    ? formData.strengths.filter((s: string) => s !== str)
+                    : [...formData.strengths, str];
+                  setFormData({ ...formData, strengths: newStrengths });
+                }}
+              >
+                <ThemedText style={[styles.strengthText, isSelected && { color: accentTextColor }]}>
+                  {t(`cv.options.strengths.${str}`, str)}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
         <ThemedText style={styles.label}>{t('cv.form.steps.sport.club_logo')}</ThemedText>
         <TouchableOpacity style={styles.logoUpload} onPress={() => pickImage('clubLogo')}>
@@ -633,5 +674,24 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginVertical: 15,
+  },
+  strengthsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginVertical: 10,
+  },
+  strengthBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  strengthText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#AAA',
   },
 });

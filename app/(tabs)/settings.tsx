@@ -8,10 +8,12 @@ import { useAuth } from '@/context/AuthContext';
 import { ACCENT_COLORS, useAppTheme } from '@/context/ThemeContext';
 import { useUser } from '@/context/UserContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { getCoachByUserId } from '@/services/coachService';
+import { Coach } from '@/types/coach';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,6 +28,13 @@ export default function SettingsScreen() {
   const tintColor = accentColor;
   const borderColor = Colors[colorScheme].border;
   const backgroundSecondary = Colors[colorScheme].backgroundSecondary;
+  const [userCoach, setUserCoach] = useState<Coach | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      getCoachByUserId(user.uid).then(setUserCoach).catch(() => {});
+    }
+  }, [user]);
 
   const toggleLanguage = async () => {
     const newLang = i18n.language === 'fr' ? 'en' : 'fr';
@@ -188,7 +197,6 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* Section: Admin (Conditional) */}
           {isAdmin && (
             <View style={styles.section}>
                <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{t('settings.administration')}</ThemedText>
@@ -197,6 +205,38 @@ export default function SettingsScreen() {
                     icon: 'lock.fill',
                     label: 'Tableau de bord Admin',
                     onPress: () => router.push('/(admin)')
+                  })}
+               </View>
+            </View>
+          )}
+
+          {/* Section: Admin Coach (conditionnel) */}
+          {userCoach && (
+            <View style={styles.section}>
+               <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>{t('coach.menu.title')}</ThemedText>
+               <View style={styles.sectionCard}>
+                  {renderSettingItem({
+                    icon: 'star.circle.fill',
+                    label: t('coach.menu.dashboard'),
+                    onPress: () => router.push('/coach/dashboard' as any)
+                  })}
+                  {renderSettingItem({
+                    icon: 'person.text.rectangle.fill',
+                    label: t('coach.menu.profile'),
+                    onPress: () => router.push({ pathname: '/coach/create', params: { edit: 'true' } } as any)
+                  })}
+               </View>
+            </View>
+          )}
+
+          {!userCoach && (
+            <View style={styles.section}>
+               <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>Coach</ThemedText>
+               <View style={styles.sectionCard}>
+                  {renderSettingItem({
+                    icon: 'star.circle.fill',
+                    label: t('coach.menu.become'),
+                    onPress: () => router.push('/coach/create' as any)
                   })}
                </View>
             </View>

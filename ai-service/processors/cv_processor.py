@@ -12,6 +12,21 @@ logger = logging.getLogger(__name__)
 from processors.shot_detector import shot_detector
 from processors.dribble_detector import dribble_detector
 
+MESSAGES = {
+    'fr': {
+        'drafting': 'Création du brouillon CapCut...',
+        'downloading': 'Téléchargement des médias...',
+        'analyzing': 'Analyse IA des performances...',
+        'rendering': 'Génération de la vidéo CV...'
+    },
+    'en': {
+        'drafting': 'Creating CapCut draft...',
+        'downloading': 'Downloading media assets...',
+        'analyzing': 'Running AI analysis...',
+        'rendering': 'Rendering video CV...'
+    }
+}
+
 # Global set to track cancelled jobs
 CANCELLED_JOBS = set()
 
@@ -54,7 +69,7 @@ def process_video_cv(player_data: dict, progress_callback=None):
         player_name = f"{player_data.get('firstName')} {player_data.get('lastName')}"
         lang = player_data.get('language', 'fr')
         msgs = MESSAGES.get(lang, MESSAGES['fr'])
-        print(f"🚀 [JOB {job_id}] Starting Premium Video CV generation for {player_name} ({lang})")
+        print(f"[JOB {job_id}] Starting Premium Video CV generation for {player_name} ({lang})")
 
         # 0. Orchestrator (CapCut Draft)
         if progress_callback: progress_callback(20, msgs['drafting'])
@@ -79,7 +94,7 @@ def process_video_cv(player_data: dict, progress_callback=None):
         )
         
         # 1. Download necessary assets
-        logger.info("⏳ Downloading media assets...")
+        logger.info("[MEDIA] Downloading media assets...")
         
         photo_url = player_data.get('profilePhotoUrl')
         off_vid_urls = player_data.get('offensiveVideoUrls', [])
@@ -124,7 +139,8 @@ def process_video_cv(player_data: dict, progress_callback=None):
             try:
                 shot_result = shot_detector.process_video(loc)
                 if shot_result.get("success"):
-                    ai_insights.extend(shot_result.get("coaching_report", []))
+                    report = shot_result.get("coaching_report") or []
+                    ai_insights.extend(report)
                     logger.info(f"🏀 Shot Insight: {shot_result.get('coaching_report')}")
             except Exception as e:
                 logger.error(f"Error during shot analysis: {e}")
@@ -136,7 +152,7 @@ def process_video_cv(player_data: dict, progress_callback=None):
                 if dribble_result.get("success") and dribble_result.get("moves"):
                     moves_str = ", ".join(dribble_result["moves"])
                     ai_insights.append(f"Dribble : {moves_str} identifiés.")
-                    logger.info(f"🔥 Dribble Insight: {moves_str}")
+                    logger.info(f"[DRIBBLE] Dribble Insight: {moves_str}")
             except Exception as e:
                 logger.error(f"Error during dribble analysis: {e}")
 
@@ -176,7 +192,7 @@ def process_video_cv(player_data: dict, progress_callback=None):
         )
             
         if final_path:
-            print(f"✅ [JOB {job_id}] Premium Video CV generated: {final_path}")
+            print(f"[SUCCESS] [JOB {job_id}] Premium Video CV generated: {final_path}")
             return {
                 "local_path": final_path,
                 "orchestrator_url": orchestrator_url
